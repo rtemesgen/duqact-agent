@@ -5,19 +5,19 @@ This folder is separate from the main `backend` and `frontend` folders.
 The Android app is a lightweight WebView wrapper for the deployed Mobi Agent web app:
 
 ```text
-https://mobi-agent-web-1042212171158.us-central1.run.app
+https://duqact.vercel.app/
 ```
 
 That deployed web app uses the online backend:
 
 ```text
-https://mobi-agent-api-1042212171158.us-central1.run.app/api
+https://mobi-agent-api-1021973675315.us-central1.run.app/api
 ```
 
 ## What This APK Does
 
-- Opens the online Mobi Agent app inside an Android app.
-- Uses the live Cloud Run backend through the deployed frontend.
+- Opens the live Mobi Agent app inside an Android app.
+- Uses the Vercel frontend and Cloud Run backend.
 - Keeps the mobile project separate from the existing backend and frontend projects.
 - Requires internet access to work.
 
@@ -81,7 +81,7 @@ mobile-apk/app/build/outputs/apk/debug/app-debug.apk
 
 ## Login
 
-Use the same online accounts:
+Use the live accounts:
 
 ```text
 Mobi Agent: agent@mobi.local / agent123
@@ -90,6 +90,6 @@ Admin: admin@mobi.local / admin123
 
 ## Notes
 
-- This app depends on the deployed Cloud Run frontend and backend being online.
-- If the Cloud Run URLs change, update `APP_URL` in `app/src/main/java/com/satesoft/mobiagent/MainActivity.java`.
+- This app depends on the deployed Vercel frontend and Cloud Run backend being online.
+- If the deployed URLs change, update `APP_URL` in `app/src/main/java/com/satesoft/mobiagent/MainActivity.java`.
 - If you want a fully offline/native Android app later, that would be a separate implementation.

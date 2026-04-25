@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   font-family: Inter, Segoe UI, Arial, sans-serif;
   color: #f4f7fb;
   background: #1f2631;
@@ -105,6 +105,14 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   border-radius: 12px; display: flex; align-items: center; gap: .7rem; padding: .9rem 1rem;
 }
 .logoutButton:hover { background: rgba(255,255,255,.04); }
+
+.mobileSidebarScrim {
+  display: none;
+}
+
+.mobileMenuButton {
+  display: none;
+}
 
 .contentShell { display: grid; grid-template-rows: 78px 1fr; min-width: 0; }
 .contentTopbar {
@@ -716,8 +724,36 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   .deskLayout { grid-template-columns: 1fr; }
 }
 @media (max-width: 900px) {
-  .workshopApp { grid-template-columns: 1fr; }
-  .workshopSidebar { position: sticky; top: 0; z-index: 3; }
+  .workshopApp {
+    grid-template-columns: 1fr;
+    position: relative;
+  }
+  .workshopSidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(300px, 84vw);
+    z-index: 20;
+    transform: translateX(-100%);
+    transition: transform .22s ease;
+  }
+  .workshopSidebar-open {
+    transform: translateX(0);
+  }
+  .workshopApp-sidebarOpen .mobileSidebarScrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(7, 10, 15, .58);
+    z-index: 15;
+  }
+  .contentShell {
+    min-width: 0;
+  }
+  .mobileMenuButton {
+    display: grid;
+  }
   .panelGrid-two, .formGrid-two, .balancePreview, .detailGrid { grid-template-columns: 1fr; }
   .roleChoiceGrid { grid-template-columns: 1fr; }
   .accountCardGrid,
@@ -736,3 +772,56 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   .profileHeaderActions { width: 100%; flex-direction: column; }
 }
 
+
+
+.mobileSidebarScrim {
+  display: none;
+  border: 0;
+  padding: 0;
+}
+
+.mobileMenuButton {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .workshopApp {
+    grid-template-columns: 1fr;
+    position: relative;
+  }
+
+  .workshopSidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(300px, 84vw);
+    z-index: 20;
+    transform: translateX(-100%);
+    transition: transform .22s ease;
+  }
+
+  .workshopSidebar-open {
+    transform: translateX(0);
+  }
+
+  .mobileSidebarScrim {
+    display: none;
+  }
+
+  .workshopApp-sidebarOpen .mobileSidebarScrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 15;
+    background: rgba(7, 10, 15, .58);
+  }
+
+  .mobileMenuButton {
+    display: grid;
+  }
+
+  .contentShell {
+    min-width: 0;
+  }
+}

@@ -17,10 +17,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 public class MainActivity extends Activity {
-    // The APK is a WebView wrapper around the deployed Cloud Run frontend.
-    // The frontend then talks to the deployed Spring Boot backend API.
-    private static final String APP_URL = "https://mobi-agent-web-1042212171158.us-central1.run.app";
-    private static final String ALLOWED_HOST = "mobi-agent-web-1042212171158.us-central1.run.app";
+    // The APK is a WebView wrapper around the deployed Vercel frontend.
+    // The frontend then talks to the deployed Spring Boot backend API on Cloud Run.
+    private static final String APP_URL = "https://duqact.vercel.app/";
+    private static final String ALLOWED_HOST = "duqact.vercel.app";
 
     private WebView webView;
     private ProgressBar progressBar;

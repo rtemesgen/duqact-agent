@@ -30,6 +30,7 @@ function AppShell() {
   const { session, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const [page, setPage] = useState<Page>('dashboard');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!session) return;
@@ -37,6 +38,10 @@ function AppShell() {
       setTheme(settings.theme);
     }).catch(() => {});
   }, [session?.userId]);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [page, session?.userId]);
 
   const nav: NavGroup[] = [
     { section: 'AGENT OPERATIONS', items: [
@@ -72,8 +77,8 @@ function AppShell() {
   }
 
   return (
-    <div className="workshopApp">
-      <aside className="workshopSidebar">
+    <div className={sidebarOpen ? 'workshopApp workshopApp-sidebarOpen' : 'workshopApp'}>
+      <aside className={sidebarOpen ? 'workshopSidebar workshopSidebar-open' : 'workshopSidebar'}>
         <div className="sidebarBrand"><div className="brandIcon">?</div><div><strong>mobi Agent</strong></div></div>
         <div className="sidebarNavScroll">
           {nav.map((group) => (
@@ -81,7 +86,7 @@ function AppShell() {
               <div className="navGroupLabel">{group.section}</div>
               <nav>
                 {group.items.map(({ key, icon: Icon, label }) => (
-                  <button key={key} type="button" className={page === key ? 'navItem navItemActive' : 'navItem'} onClick={() => setPage(key)}>
+                  <button key={key} type="button" className={page === key ? 'navItem navItemActive' : 'navItem'} onClick={() => { setPage(key); setSidebarOpen(false); }}>
                     <Icon size={18} /><span>{label}</span>{page === key && <ChevronRight size={16} />}
                   </button>
                 ))}
@@ -99,9 +104,10 @@ function AppShell() {
           <button type="button" className="logoutButton" onClick={logout}><LogOut size={18} />Logout</button>
         </div>
       </aside>
+      <button type="button" className="mobileSidebarScrim" aria-label="Close navigation" onClick={() => setSidebarOpen(false)} />
       <div className="contentShell">
         <header className="contentTopbar">
-          <div className="topbarLeft"><button type="button" className="iconButton iconButton-ghost"><Menu size={18} /></button><div className="topbarTitle">{pageTitle}</div></div>
+          <div className="topbarLeft"><button type="button" className="iconButton iconButton-ghost mobileMenuButton" aria-label={sidebarOpen ? 'Hide navigation' : 'Show navigation'} aria-expanded={sidebarOpen} onClick={() => setSidebarOpen((open) => !open)}><Menu size={18} /></button><div className="topbarTitle">{pageTitle}</div></div>
           <div className="topbarRight">
             <div className="topbarMeta topbarMeta-globe"><Globe size={16} /><span>EN</span></div>
             <button type="button" className="iconButton iconButton-ghost"><Bell size={18} /></button>
@@ -134,5 +140,3 @@ createRoot(document.getElementById('root')!).render(
     </ThemeProvider>
   </AuthProvider>,
 );
-
-
