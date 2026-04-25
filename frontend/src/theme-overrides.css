@@ -1,0 +1,66 @@
+[data-theme="light"] {
+  --bg: #eef2f7;
+  --sidebar: #f7f9fc;
+  --surface: #ffffff;
+  --surface-2: #f6f8fb;
+  --surface-3: #f2f5f9;
+  --border: #d6dce8;
+  --border-soft: rgba(17,24,39,.08);
+  --text: #182132;
+  --muted: #5d6a80;
+  --muted-2: #708098;
+  --shadow: 0 18px 32px rgba(15,23,42,.08);
+}
+
+.workshopSidebar {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebarNavScroll {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  padding-right: .25rem;
+}
+
+[data-theme="light"] body,
+[data-theme="light"] .workshopApp {
+  background: linear-gradient(180deg, #eef2f7 0, #e7edf6 100%);
+}
+
+[data-theme="light"] .workshopSidebar {
+  background: linear-gradient(180deg, #f7f9fc 0%, #eef2f7 100%);
+}
+
+[data-theme="light"] .navGroupLabel { color: #7a8699; }
+[data-theme="light"] .navItem { color: #243146; }
+[data-theme="light"] .navItem:hover,
+[data-theme="light"] .logoutButton:hover,
+[data-theme="light"] .secondaryButton:hover,
+[data-theme="light"] .iconButton:hover { background: rgba(15,23,42,.05); }
+[data-theme="light"] .darkModeRow,
+[data-theme="light"] .logoutButton,
+[data-theme="light"] .topbarMeta,
+[data-theme="light"] .topbarTitle,
+[data-theme="light"] .userChip strong,
+[data-theme="light"] .workshopTable td,
+[data-theme="light"] .receiptSplit strong,
+[data-theme="light"] .receiptRows strong,
+[data-theme="light"] .detailCard strong,
+[data-theme="light"] .accountChoice strong,
+[data-theme="light"] .verificationSlot span { color: #182132; }
+[data-theme="light"] .surfaceCard,
+[data-theme="light"] .metricCard,
+[data-theme="light"] .summaryPanel,
+[data-theme="light"] .detailCard,
+[data-theme="light"] .verificationSlot,
+[data-theme="light"] .accountChoice,
+[data-theme="light"] .receiptCard,
+[data-theme="light"] .authForm,
+[data-theme="light"] .authStats div,
+[data-theme="light"] .searchField,
+[data-theme="light"] .iconButton { background: #fff; }
+[data-theme="light"] .contentTopbar { background: rgba(255,255,255,.82); }
+[data-theme="light"] .profileBanner { background: linear-gradient(135deg, #dfe6f3 0, #eef2f7 40%, #f8fafc 100%); }
+[data-theme="light"] .profileAvatar { border-color: #fff; }
