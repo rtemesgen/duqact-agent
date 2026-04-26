@@ -1,24 +1,8 @@
-import { useAuth } from '../auth/AuthContext';
+﻿import { useAuth } from '../auth/AuthContext';
 import { useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, LockKeyhole, ShieldCheck, UserRound, WalletCards } from 'lucide-react';
+import { ArrowLeft, ArrowRight, LockKeyhole, WalletCards } from 'lucide-react';
 
 type Mode = 'login' | 'register';
-type QuickRole = 'Admin' | 'Mobi Agent';
-
-const quickProfiles: Record<QuickRole, { email: string; password: string; icon: typeof ShieldCheck; description: string }> = {
-  Admin: {
-    email: 'admin@mobi.local',
-    password: 'admin123',
-    icon: ShieldCheck,
-    description: 'Role management and full workshop access',
-  },
-  'Mobi Agent': {
-    email: 'agent@mobi.local',
-    password: 'agent123',
-    icon: UserRound,
-    description: 'Transactions, channels, accounts, wallets',
-  },
-};
 
 export function LoginPage() {
   const { login, register } = useAuth();
@@ -50,22 +34,6 @@ export function LoginPage() {
     }
   }
 
-  async function quick(role: QuickRole) {
-    const profile = quickProfiles[role];
-    setEmail(profile.email);
-    setPassword(profile.password);
-    setMode('login');
-    setBusy(true);
-    setError('');
-    try {
-      await login(profile.email, profile.password);
-    } catch {
-      setError('Seeded login failed. Make sure the backend is running with an empty or seeded database.');
-    } finally {
-      setBusy(false);
-    }
-  }
-
   return (
     <main className="authShell">
       <section className="authShowcase">
@@ -73,7 +41,7 @@ export function LoginPage() {
         <div>
           <p className="eyebrow">Reference Adoption</p>
           <h1>Use the reference Mobi shell and workflows on top of the stronger backend.</h1>
-          <p className="pageLead">Users can now sign in directly with email and password after registration, while seeded demo access remains available for admin and agent flows.</p>
+          <p className="pageLead">Users sign in directly with email and password, while registration keeps the standard Mobi Agent onboarding flow.</p>
         </div>
         <div className="authStats">
           <div>
@@ -85,8 +53,8 @@ export function LoginPage() {
             <span>Registered users return to a plain email and password form</span>
           </div>
           <div>
-            <strong>Seed access</strong>
-            <span>Admin and Mobi Agent quick access for demo flow parity</span>
+            <strong>Production-ready</strong>
+            <span>Demo one-click login is hidden from the live sign-in experience</span>
           </div>
         </div>
       </section>
@@ -150,21 +118,12 @@ export function LoginPage() {
           </div>
         </div>
 
-        <div className="quickAccess">
-          <button type="button" className="secondaryButton quickButton" onClick={() => quick('Mobi Agent')} disabled={busy}>
-            <UserRound size={16} />
-            Seed Agent
-          </button>
-          <button type="button" className="secondaryButton quickButton" onClick={() => quick('Admin')} disabled={busy}>
-            <ShieldCheck size={16} />
-            Seed Admin
-          </button>
-        </div>
         <div className="authNote">
           <LockKeyhole size={16} />
-          Seeded users are created only when the database is empty.
+          Use your assigned account credentials to access the live workshop.
         </div>
       </section>
     </main>
   );
 }
+

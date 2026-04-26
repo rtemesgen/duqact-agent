@@ -825,3 +825,250 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
     min-width: 0;
   }
 }
+
+@media (max-width: 900px) {
+  .contentShell {
+    grid-template-rows: 72px 1fr;
+  }
+
+  .contentTopbar {
+    position: sticky;
+    top: 0;
+    z-index: 12;
+  }
+}
+
+@media (max-width: 720px) {
+  .contentShell {
+    grid-template-rows: 68px 1fr;
+  }
+
+  .contentTopbar {
+    padding-top: .75rem;
+    padding-bottom: .75rem;
+  }
+}
+
+.deskBalanceHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.deskBalanceHead strong {
+  color: #fff;
+  font-size: .96rem;
+}
+
+.deskBalanceToggle {
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .deskBalanceHead {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .deskBalanceToggle {
+    width: 100%;
+  }
+}
+
+@media (max-width: 720px) {
+  input, select, textarea {
+    border-radius: 10px;
+    padding: .8rem .9rem;
+  }
+
+  label {
+    font-size: .82rem;
+    gap: .35rem;
+  }
+
+  .workshopMain {
+    padding: .9rem;
+  }
+
+  .pageSection {
+    gap: .9rem;
+  }
+
+  .pageHero {
+    gap: .7rem;
+    padding: .1rem 0;
+  }
+
+  .pageHero h1 {
+    font-size: 1.55rem;
+    line-height: 1.08;
+  }
+
+  .pageLead {
+    margin-top: .4rem;
+    font-size: .92rem;
+    line-height: 1.5;
+  }
+
+  .surfaceCard,
+  .metricCard,
+  .summaryPanel,
+  .detailCard,
+  .authForm,
+  .authStats div {
+    border-radius: 14px;
+    padding: .95rem;
+  }
+
+  .surfaceHead {
+    margin-bottom: .7rem;
+  }
+
+  .surfaceHead h2,
+  .workshopModalHead h2 {
+    font-size: 1rem;
+  }
+
+  .toolbarRow {
+    gap: .75rem;
+  }
+
+  .searchField {
+    min-width: 100%;
+    padding: .7rem .85rem;
+  }
+
+  .deskPanel {
+    min-height: auto;
+  }
+
+  .receiptCard {
+    width: 100%;
+    border-radius: 16px;
+  }
+
+  .receiptHead,
+  .receiptBody {
+    padding: .9rem;
+  }
+
+  .receiptHead strong {
+    font-size: 1.15rem;
+  }
+
+  .receiptRows,
+  .receiptSignature {
+    gap: .55rem;
+  }
+
+  .balancePreview div,
+  .miniStats div {
+    padding: .85rem;
+    border-radius: 12px;
+  }
+
+  .workshopTable {
+    min-width: 640px;
+  }
+
+  .workshopTable th,
+  .workshopTable td {
+    padding: .8rem .65rem;
+  }
+
+  .modalShade {
+    align-items: end;
+    padding: .5rem;
+  }
+
+  .workshopModal,
+  .workshopModal-lg {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100vh - 1rem);
+    border-radius: 18px 18px 0 0;
+  }
+
+  .workshopModalHead,
+  .workshopModalBody,
+  .workshopModalActions {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .workshopModalHead {
+    padding-top: .95rem;
+    padding-bottom: .85rem;
+  }
+
+  .workshopModalBody {
+    gap: .85rem;
+    padding-top: .9rem;
+    padding-bottom: .9rem;
+    max-height: calc(100vh - 12rem);
+    overflow-y: auto;
+  }
+
+  .workshopModalActions {
+    gap: .6rem;
+    padding-top: .85rem;
+    padding-bottom: max(.9rem, env(safe-area-inset-bottom));
+    flex-direction: column-reverse;
+  }
+
+  .workshopModalActions .primaryButton,
+  .workshopModalActions .secondaryButton {
+    width: 100%;
+  }
+
+  .tabRow {
+    gap: .6rem;
+    overflow-x: auto;
+    padding-bottom: .15rem;
+  }
+
+  .tabButton {
+    white-space: nowrap;
+    padding-bottom: .75rem;
+  }
+
+  .authShowcase,
+  .authCard {
+    padding: 1rem;
+  }
+
+  .authShowcase h1 {
+    font-size: 1.8rem;
+  }
+
+  .profileBanner {
+    height: 120px;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .profileHeaderCard {
+    margin-top: -44px;
+    padding: 0 .9rem .9rem;
+  }
+
+  .profileAvatar {
+    width: 88px;
+    height: 88px;
+    font-size: 1.45rem;
+    border-width: 3px;
+  }
+
+  .avatarBubble {
+    width: 40px;
+    height: 40px;
+  }
+
+  .userChip {
+    gap: .55rem;
+  }
+
+  .userChip span {
+    font-size: .76rem;
+  }
+}

@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { History, Search } from 'lucide-react';
+﻿import { useEffect, useMemo, useState } from 'react';
+import { Eye, EyeOff, History, Search } from 'lucide-react';
 import { api } from '../api/client';
 import type { MnoAccount, MnoWallet, TransactionType } from '../api/types';
 import { formatCurrency, transactionLabel } from '../lib/format';
@@ -10,7 +10,7 @@ type Draft = {
   transactionType: TransactionType;
   amount: string;
   clientPhone: string;
-  clientName: string;
+  clientId: string;
   remarks: string;
 };
 
@@ -20,15 +20,20 @@ const blankDraft: Draft = {
   transactionType: 'DEPOSIT',
   amount: '',
   clientPhone: '',
-  clientName: '',
+  clientId: '',
   remarks: '',
 };
+
+function maskedCurrency(value: number, visible: boolean) {
+  return visible ? formatCurrency(value) : '••••••';
+}
 
 export function TransactionsDeskPage() {
   const [accounts, setAccounts] = useState<MnoAccount[]>([]);
   const [wallets, setWallets] = useState<MnoWallet[]>([]);
   const [draft, setDraft] = useState<Draft>(blankDraft);
   const [message, setMessage] = useState('');
+  const [balancesVisible, setBalancesVisible] = useState(false);
 
   useEffect(() => {
     Promise.all([api.accounts(), api.wallets()]).then(([accountData, walletData]) => {
@@ -40,14 +45,13 @@ export function TransactionsDeskPage() {
         ...current,
         accountId: initialAccount?.id ?? 0,
         walletId: initialWallet?.id ?? 0,
-        clientName: '',
+        clientId: '',
       }));
     });
   }, []);
 
   const selectedAccount = accounts.find((account) => account.id === draft.accountId) ?? accounts[0];
-  const accountWallets = wallets.filter((wallet) => wallet.agentId === (selectedAccount?.id ?? -1));
-  const selectedWallet = accountWallets.find((wallet) => wallet.id === draft.walletId) ?? accountWallets[0] ?? wallets.find((wallet) => wallet.id === draft.walletId);
+  const selectedWallet = wallets.find((wallet) => wallet.id === draft.walletId);
   const amount = Number(draft.amount || 0);
   const positive = draft.transactionType === 'FLOAT_TOP_UP' || draft.transactionType === 'FLOAT_WITHDRAWAL';
   const previousBalance = Number(selectedWallet?.balance ?? selectedAccount?.emoneyAmount ?? 0);
@@ -70,15 +74,15 @@ export function TransactionsDeskPage() {
   })), [accounts, draft.accountId]);
 
   async function recordTransaction() {
-    if (!selectedWallet?.id || !draft.amount) return;
+    if (!selectedWallet?.id || !draft.amount || !selectedAccount) return;
     try {
       await api.recordTransaction({
         walletId: selectedWallet.id,
         transactionType: draft.transactionType,
         amount,
-        agentNumber: selectedAccount?.agentId || selectedWallet.name,
+        agentNumber: selectedAccount.agentId || selectedAccount.name,
         clientPhone: draft.clientPhone,
-        clientName: draft.clientName,
+        clientName: draft.clientId,
       });
       setMessage('Transaction recorded.');
       const refreshedWallets = await api.wallets();
@@ -87,22 +91,28 @@ export function TransactionsDeskPage() {
         ...current,
         amount: '',
         clientPhone: '',
-        clientName: '',
+        clientId: '',
         remarks: '',
       }));
+      setBalancesVisible(false);
     } catch {
       setMessage('Transaction failed.');
     }
   }
 
   function updateDraft<K extends keyof Draft>(key: K, value: Draft[K]) {
-    setDraft((current) => {
-      const next = { ...current, [key]: value };
-      if (key === 'clientPhone') {
-        next.clientName = String(value).length > 5 ? 'Verified Client Name' : '';
-      }
-      return next;
-    });
+    setDraft((current) => ({ ...current, [key]: value }));
+  }
+
+  function resetDraft() {
+    setDraft((current) => ({
+      ...current,
+      amount: '',
+      clientPhone: '',
+      clientId: '',
+      remarks: '',
+    }));
+    setBalancesVisible(false);
   }
 
   return (
@@ -111,7 +121,7 @@ export function TransactionsDeskPage() {
         <div>
           <p className="eyebrow">Operations</p>
           <h1>Transactions Desk</h1>
-          <p className="pageLead">Record a transaction from a single operational desk with live preview and running balance feedback.</p>
+          <p className="pageLead">Record a transaction from a single operational desk with form-first entry, protected balances, and live preview.</p>
         </div>
       </div>
 
@@ -120,11 +130,70 @@ export function TransactionsDeskPage() {
       <div className="deskLayout">
         <section className="surfaceCard deskPanel">
           <div className="surfaceHead">
+            <h2>Transaction Entry</h2>
+            <div className="topbarMeta topbarMeta-globe"><History size={16} /><span>Active Session</span></div>
+          </div>
+          <div className="formGrid">
+            <div className="accountCardGrid">
+              {accountCards.map(({ account, active, channel }) => (
+                <button key={account.id} type="button" className={active ? 'accountChoice accountChoiceActive' : 'accountChoice'} onClick={() => updateDraft('accountId', account.id ?? 0)}>
+                  <strong>{account.name}</strong>
+                  <span>{channel}</span>
+                </button>
+              ))}
+            </div>
+            <div className="formGrid formGrid-two">
+              <label>
+                Client Phone
+                <input value={draft.clientPhone} onChange={(e) => updateDraft('clientPhone', e.target.value)} placeholder="+256..." />
+              </label>
+              <label>
+                Client ID
+                <input value={draft.clientId} onChange={(e) => updateDraft('clientId', e.target.value)} placeholder="Enter client ID" />
+              </label>
+              <label>
+                Transaction Type
+                <select value={draft.transactionType} onChange={(e) => updateDraft('transactionType', e.target.value as TransactionType)}>
+                  <option value="DEPOSIT">Deposit</option>
+                  <option value="FLOAT_TRANSFER">Withdrawal</option>
+                  <option value="FLOAT_TOP_UP">Float top-up</option>
+                  <option value="FLOAT_WITHDRAWAL">Float withdrawal</option>
+                </select>
+              </label>
+              <label>
+                Amount ({selectedAccount?.currency || 'UGX'})
+                <input type="number" value={draft.amount} onChange={(e) => updateDraft('amount', e.target.value)} placeholder="0.00" min={0} />
+              </label>
+            </div>
+            <label>
+              Remarks (Internal)
+              <textarea value={draft.remarks} onChange={(e) => updateDraft('remarks', e.target.value)} placeholder="Any additional notes..." rows={3} />
+            </label>
+            <div className="deskBalanceHead">
+              <strong>Balance Visibility</strong>
+              <button type="button" className="secondaryButton deskBalanceToggle" onClick={() => setBalancesVisible((current) => !current)}>
+                {balancesVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                {balancesVisible ? 'Hide Balances' : 'Show Balances'}
+              </button>
+            </div>
+            <div className="balancePreview">
+              <div><span>Previous Balance</span><strong>{maskedCurrency(previousBalance, balancesVisible)}</strong></div>
+              <div><span>New Balance</span><strong>{maskedCurrency(newBalance, balancesVisible)}</strong></div>
+            </div>
+            <div className="workshopModalActions deskActions">
+              <button type="button" className="secondaryButton" onClick={resetDraft}>Cancel</button>
+              <button type="button" className="primaryButton" onClick={recordTransaction} disabled={!draft.amount || !selectedWallet || !selectedAccount}>Record Transaction</button>
+            </div>
+          </div>
+        </section>
+
+        <section className="surfaceCard deskPanel">
+          <div className="surfaceHead">
             <h2>Transaction Preview</h2>
             <span className="deskHint">Live receipt</span>
           </div>
           <div className="receiptPreview">
-            {!draft.amount ? (
+            {!draft.amount && !draft.clientPhone && !draft.clientId ? (
               <div className="receiptEmpty">
                 <Search size={28} />
                 <p>Start entering details to see a preview.</p>
@@ -148,11 +217,10 @@ export function TransactionsDeskPage() {
                     </div>
                   </div>
                   <div className="receiptRows">
-                    <div><span>Wallet</span><strong>{selectedWallet?.name ?? '--'}</strong></div>
-                    <div><span>Client</span><strong>{draft.clientName || 'N/A'}</strong></div>
+                    <div><span>Client ID</span><strong>{draft.clientId || 'N/A'}</strong></div>
                     <div><span>Phone</span><strong>{draft.clientPhone || 'N/A'}</strong></div>
                     <div><span>Amount</span><strong className="accentText">{formatCurrency(amount)}</strong></div>
-                    <div><span>Running Balance</span><strong>{formatCurrency(newBalance)}</strong></div>
+                    <div><span>Running Balance</span><strong>{maskedCurrency(newBalance, balancesVisible)}</strong></div>
                   </div>
                   <div className="receiptSignature">
                     <div />
@@ -163,69 +231,8 @@ export function TransactionsDeskPage() {
             )}
           </div>
         </section>
-
-        <section className="surfaceCard deskPanel">
-          <div className="surfaceHead">
-            <h2>Transaction Entry</h2>
-            <div className="topbarMeta topbarMeta-globe"><History size={16} /><span>Active Session</span></div>
-          </div>
-          <div className="formGrid">
-            <div className="accountCardGrid">
-              {accountCards.map(({ account, active, channel }) => (
-                <button key={account.id} type="button" className={active ? 'accountChoice accountChoiceActive' : 'accountChoice'} onClick={() => updateDraft('accountId', account.id ?? 0)}>
-                  <strong>{account.name}</strong>
-                  <span>{channel}</span>
-                </button>
-              ))}
-            </div>
-            <div className="formGrid formGrid-two">
-              <label>
-                Transaction Type
-                <select value={draft.transactionType} onChange={(e) => updateDraft('transactionType', e.target.value as TransactionType)}>
-                  <option value="DEPOSIT">Deposit</option>
-                  <option value="FLOAT_TRANSFER">Withdrawal</option>
-                  <option value="FLOAT_TOP_UP">Float top-up</option>
-                  <option value="FLOAT_WITHDRAWAL">Float withdrawal</option>
-                </select>
-              </label>
-              <label>
-                Wallet
-                <select value={draft.walletId} onChange={(e) => updateDraft('walletId', Number(e.target.value))}>
-                  {accountWallets.map((wallet) => <option key={wallet.id} value={wallet.id}>{wallet.name} ({wallet.network})</option>)}
-                </select>
-              </label>
-              <label>
-                Amount ({selectedAccount?.currency || 'UGX'})
-                <input type="number" value={draft.amount} onChange={(e) => updateDraft('amount', e.target.value)} placeholder="0.00" min={0} />
-              </label>
-              <label>
-                Agent Number
-                <input value={selectedAccount?.agentId || ''} readOnly />
-              </label>
-              <label>
-                Client Name
-                <input value={draft.clientName} onChange={(e) => updateDraft('clientName', e.target.value)} placeholder="Enter full name" />
-              </label>
-              <label>
-                Client Phone
-                <input value={draft.clientPhone} onChange={(e) => updateDraft('clientPhone', e.target.value)} placeholder="+256..." />
-              </label>
-            </div>
-            <label>
-              Remarks (Internal)
-              <textarea value={draft.remarks} onChange={(e) => updateDraft('remarks', e.target.value)} placeholder="Any additional notes..." rows={3} />
-            </label>
-            <div className="balancePreview">
-              <div><span>Previous Balance</span><strong>{formatCurrency(previousBalance)}</strong></div>
-              <div><span>New Balance</span><strong>{formatCurrency(newBalance)}</strong></div>
-            </div>
-            <div className="workshopModalActions deskActions">
-              <button type="button" className="secondaryButton" onClick={() => setDraft((current) => ({ ...current, amount: '', clientPhone: '', clientName: '', remarks: '' }))}>Cancel</button>
-              <button type="button" className="primaryButton" onClick={recordTransaction} disabled={!draft.amount || !selectedWallet}>Record Transaction</button>
-            </div>
-          </div>
-        </section>
       </div>
     </section>
   );
 }
+

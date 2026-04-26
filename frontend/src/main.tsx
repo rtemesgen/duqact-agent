@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+﻿import { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Bell, ChartNoAxesColumn, ChevronRight, CircleDollarSign, Globe, Landmark, Layers3, LogOut, Menu, Moon, ReceiptText, Settings, Shield, ShoppingBag, Sun, UserRound, WalletCards } from 'lucide-react';
+import { Bell, ChartNoAxesColumn, ChevronRight, CircleDollarSign, Globe, Landmark, Layers3, LogOut, Menu, Moon, ReceiptText, Settings, Shield, ShoppingBag, Sun, UserRound } from 'lucide-react';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import { ThemeProvider, useTheme } from './theme/ThemeContext';
 import { api } from './api/client';
@@ -8,7 +8,6 @@ import type { ThemePreference } from './api/types';
 import type { Page } from './uiTypes';
 import { LoginPage } from './pages/LoginPage';
 import { MobiAgentSettingsPage } from './pages/MobiAgentSettingsPage';
-import { MNOWalletSettingsPage } from './pages/MNOWalletSettingsPage';
 import { MNOWalletTransactionsPage } from './pages/MNOWalletTransactionsPage';
 import { ExchangeRatePage } from './pages/ExchangeRatePage';
 import { AdminUsersPage } from './pages/AdminUsersPage';
@@ -37,7 +36,7 @@ function AppShell() {
     api.settingsMe().then((settings) => {
       setTheme(settings.theme);
     }).catch(() => {});
-  }, [session?.userId]);
+  }, [session?.userId, setTheme]);
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -50,7 +49,6 @@ function AppShell() {
       { key: 'transactions', icon: ReceiptText, label: 'Mobi Transactions' },
       { key: 'channels', icon: Layers3, label: 'Channel Management' },
       { key: 'accounts', icon: Landmark, label: 'Mobi Account Setting' },
-      { key: 'wallets', icon: WalletCards, label: 'Wallets' },
       { key: 'rates', icon: CircleDollarSign, label: 'Exchange Rate' },
     ]},
     { section: 'MICROSERVICE', items: [{ key: 'apiDocs', icon: Globe, label: 'API Documentation' }] },
@@ -120,7 +118,6 @@ function AppShell() {
           {page === 'transactions' && <MNOWalletTransactionsPage />}
           {page === 'channels' && <ChannelManagementPage />}
           {page === 'accounts' && <MobiAgentSettingsPage />}
-          {page === 'wallets' && <MNOWalletSettingsPage />}
           {page === 'rates' && <ExchangeRatePage />}
           {page === 'apiDocs' && <ApiDocumentationPage />}
           {page === 'shop' && <MobiAgentShopPage />}
@@ -140,3 +137,4 @@ createRoot(document.getElementById('root')!).render(
     </ThemeProvider>
   </AuthProvider>,
 );
+
