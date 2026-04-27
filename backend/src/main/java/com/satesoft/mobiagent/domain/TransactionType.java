@@ -1,2 +1,28 @@
 package com.satesoft.mobiagent.domain;
-public enum TransactionType { FLOAT_TOP_UP, FLOAT_WITHDRAWAL, DEPOSIT, WITHDRAW, FLOAT_TRANSFER }
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
+public enum TransactionType {
+    FLOAT_TOP_UP,
+    FLOAT_WITHDRAWAL,
+    DEPOSIT,
+    WITHDRAWAL,
+    FLOAT_TRANSFER;
+
+    @JsonCreator
+    public static TransactionType fromWireValue(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return switch (value.trim().toUpperCase()) {
+            case "WITHDRAW" -> WITHDRAWAL;
+            default -> valueOf(value.trim().toUpperCase());
+        };
+    }
+
+    @JsonValue
+    public String toWireValue() {
+        return this == WITHDRAWAL ? "WITHDRAW" : name();
+    }
+}

@@ -47,7 +47,7 @@ class TransactionService {
                 newCash = previousCash.add(request.amount());
                 if (newEmoney.signum() < 0) throw new IllegalArgumentException("Insufficient e-cash balance");
             }
-            case WITHDRAW -> {
+            case WITHDRAWAL -> {
                 newCash = previousCash.subtract(request.amount());
                 newEmoney = previousEmoney.add(request.amount());
                 if (newCash.signum() < 0) throw new IllegalArgumentException("Insufficient cash at hand");
