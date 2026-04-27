@@ -37,7 +37,7 @@ public class DashboardController {
         BigDecimal cash = accountList.stream().map(MnoAccount::getCashAtHand).reduce(BigDecimal.ZERO, BigDecimal::add);
         BigDecimal walletBalance = emoney;
         BigDecimal deposits = txList.stream().filter(tx -> tx.getTransactionType() == TransactionType.DEPOSIT).map(MnoTransaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal withdrawals = txList.stream().filter(tx -> tx.getTransactionType() == TransactionType.WITHDRAWAL).map(MnoTransaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal withdrawals = txList.stream().filter(tx -> tx.getTransactionType() == TransactionType.FLOAT_WITHDRAWAL).map(MnoTransaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
         return new DashboardStats(
                 accountList.size(),
                 walletList.size(),

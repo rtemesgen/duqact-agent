@@ -70,8 +70,9 @@ export function MNOWalletTransactionsPage() {
   const previousEmoney = Number(currentAccount?.emoneyAmount ?? 0);
   const previousCash = Number(currentAccount?.cashAtHand ?? 0);
   const amount = Number(edit?.amount ?? 0);
-  const nextEmoney = edit?.transactionType === 'DEPOSIT' ? previousEmoney - amount : edit?.transactionType === 'WITHDRAW' ? previousEmoney + amount : edit?.transactionType === 'FLOAT_TOP_UP' ? previousEmoney + amount : previousEmoney - amount;
-  const nextCash = edit?.transactionType === 'DEPOSIT' ? previousCash + amount : edit?.transactionType === 'WITHDRAW' ? previousCash - amount : previousCash;
+  const isWithdrawal = edit?.transactionType === 'WITHDRAW' || edit?.transactionType === 'FLOAT_WITHDRAWAL';
+  const nextEmoney = edit?.transactionType === 'DEPOSIT' ? previousEmoney - amount : isWithdrawal || edit?.transactionType === 'FLOAT_TOP_UP' ? previousEmoney + amount : previousEmoney - amount;
+  const nextCash = edit?.transactionType === 'DEPOSIT' ? previousCash + amount : isWithdrawal ? previousCash - amount : previousCash;
   const invalidEmoney = nextEmoney < 0;
   const invalidCash = nextCash < 0;
   const invalidBalanceMessage = invalidEmoney ? 'Insufficient e-cash balance.' : invalidCash ? 'Insufficient cash at hand.' : '';
@@ -117,8 +118,8 @@ export function MNOWalletTransactionsPage() {
                   <td>{item.accountName || item.mnoWalletName || '--'}</td>
                   <td>{item.agentNumber || '--'}</td>
                   <td>{item.clientPhone || '--'}</td>
-                  <td><span className={`statusPill ${item.transactionType === 'WITHDRAW' ? 'statusPositive' : 'statusNeutral'}`}>{transactionLabel(item.transactionType)}</span></td>
-                  <td className={item.transactionType === 'WITHDRAW' ? 'tablePositive' : 'tableNegative'}>{item.transactionType === 'WITHDRAW' ? '+' : '-'}{formatCurrency(item.amount)}</td>
+                  <td><span className={`statusPill ${item.transactionType === 'WITHDRAW' || item.transactionType === 'FLOAT_WITHDRAWAL' ? 'statusPositive' : 'statusNeutral'}`}>{transactionLabel(item.transactionType)}</span></td>
+                  <td className={item.transactionType === 'WITHDRAW' || item.transactionType === 'FLOAT_WITHDRAWAL' ? 'tablePositive' : 'tableNegative'}>{item.transactionType === 'WITHDRAW' || item.transactionType === 'FLOAT_WITHDRAWAL' ? '+' : '-'}{formatCurrency(item.amount)}</td>
                   <td>{formatCurrency(item.previousEmoney ?? item.previousBalance)}</td>
                   <td className="tableStrong">{formatCurrency(item.newEmoney ?? item.balance)}</td>
                   <td><button type="button" className="iconButton" aria-label="View transaction" onClick={() => setSelected(item)}><Eye size={16} /></button></td>
@@ -145,7 +146,7 @@ export function MNOWalletTransactionsPage() {
           <div className="formGrid formGrid-two">
             <label>Phone Number<input value={edit.clientPhone} onChange={e => setEdit({ ...edit, clientPhone: e.target.value })} placeholder="+256..." /></label>
             <label>Account<select value={edit.accountId} onChange={e => setEdit({ ...edit, accountId: Number(e.target.value) })}>{accounts.map(account => <option key={account.id} value={account.id}>{account.name} ({account.network})</option>)}</select></label>
-            <label>Transaction Type<select value={edit.transactionType} onChange={e => setEdit({ ...edit, transactionType: e.target.value as TransactionType })}><option value="DEPOSIT">Deposit</option><option value="WITHDRAW">Withdraw</option><option value="FLOAT_TOP_UP">Float Top-up</option><option value="FLOAT_WITHDRAWAL">Float Withdrawal</option></select></label>
+            <label>Transaction Type<select value={edit.transactionType} onChange={e => setEdit({ ...edit, transactionType: e.target.value as TransactionType })}><option value="DEPOSIT">Deposit</option><option value="FLOAT_WITHDRAWAL">Withdrawal</option><option value="FLOAT_TOP_UP">Float Top-up</option></select></label>
             <label>Amount (UGX)<input type="number" value={edit.amount} onChange={e => setEdit({ ...edit, amount: Number(e.target.value) })} min={0} /></label>
             <label>Client ID<input value={edit.clientId} onChange={e => setEdit({ ...edit, clientId: e.target.value })} placeholder="Client ID" /></label>
           </div>
@@ -169,7 +170,7 @@ export function MNOWalletTransactionsPage() {
             <div className="detailCard"><span>Client ID</span><strong>{selected.clientId || selected.clientName || '--'}</strong></div>
             <div className="detailCard"><span>Status</span><strong>{selected.status}</strong></div>
             <div className="detailCard"><span>Transaction Type</span><strong>{transactionLabel(selected.transactionType)}</strong></div>
-            <div className="detailCard"><span>Amount</span><strong className={selected.transactionType === 'WITHDRAW' ? 'tablePositive' : 'tableNegative'}>{formatCurrency(selected.amount)}</strong></div>
+            <div className="detailCard"><span>Amount</span><strong className={selected.transactionType === 'WITHDRAW' || selected.transactionType === 'FLOAT_WITHDRAWAL' ? 'tablePositive' : 'tableNegative'}>{formatCurrency(selected.amount)}</strong></div>
             <div className="detailCard"><span>Previous E-cash</span><strong>{formatCurrency(selected.previousEmoney ?? selected.previousBalance)}</strong></div>
             <div className="detailCard"><span>New E-cash</span><strong>{formatCurrency(selected.newEmoney ?? selected.balance)}</strong></div>
             <div className="detailCard"><span>Previous Cash at Hand</span><strong>{formatCurrency(selected.previousCashAtHand)}</strong></div>

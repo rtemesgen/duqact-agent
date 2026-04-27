@@ -47,7 +47,7 @@ class TransactionService {
                 newCash = previousCash.add(request.amount());
                 if (newEmoney.signum() < 0) throw new IllegalArgumentException("Insufficient e-cash balance");
             }
-            case WITHDRAWAL -> {
+            case FLOAT_WITHDRAWAL -> {
                 newCash = previousCash.subtract(request.amount());
                 newEmoney = previousEmoney.add(request.amount());
                 if (newCash.signum() < 0) throw new IllegalArgumentException("Insufficient cash at hand");
@@ -55,7 +55,7 @@ class TransactionService {
             case FLOAT_TOP_UP -> {
                 newEmoney = previousEmoney.add(request.amount());
             }
-            case FLOAT_WITHDRAWAL, FLOAT_TRANSFER -> {
+            case FLOAT_TRANSFER -> {
                 newEmoney = previousEmoney.subtract(request.amount());
                 if (newEmoney.signum() < 0) throw new IllegalArgumentException("Insufficient e-cash balance");
             }

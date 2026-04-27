@@ -7,7 +7,6 @@ public enum TransactionType {
     FLOAT_TOP_UP,
     FLOAT_WITHDRAWAL,
     DEPOSIT,
-    WITHDRAWAL,
     FLOAT_TRANSFER;
 
     @JsonCreator
@@ -16,13 +15,13 @@ public enum TransactionType {
             return null;
         }
         return switch (value.trim().toUpperCase()) {
-            case "WITHDRAW" -> WITHDRAWAL;
+            case "WITHDRAW", "WITHDRAWAL" -> FLOAT_WITHDRAWAL;
             default -> valueOf(value.trim().toUpperCase());
         };
     }
 
     @JsonValue
     public String toWireValue() {
-        return this == WITHDRAWAL ? "WITHDRAW" : name();
+        return this == FLOAT_WITHDRAWAL ? "WITHDRAW" : name();
     }
 }

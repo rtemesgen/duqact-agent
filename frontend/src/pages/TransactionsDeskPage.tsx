@@ -55,15 +55,16 @@ export function TransactionsDeskPage() {
   const amount = Number(draft.amount || 0);
   const previousEmoney = Number(selectedAccount?.emoneyAmount ?? 0);
   const previousCash = Number(selectedAccount?.cashAtHand ?? 0);
-  const emoneyDirection = draft.transactionType === 'DEPOSIT' || draft.transactionType === 'FLOAT_WITHDRAWAL' || draft.transactionType === 'FLOAT_TRANSFER' ? -1 : 1;
+  const isWithdrawal = draft.transactionType === 'WITHDRAW' || draft.transactionType === 'FLOAT_WITHDRAWAL';
+  const emoneyDirection = draft.transactionType === 'DEPOSIT' || draft.transactionType === 'FLOAT_TRANSFER' ? -1 : 1;
   const nextEmoney = previousEmoney + (amount * emoneyDirection);
   const nextCash =
     draft.transactionType === 'DEPOSIT'
       ? previousCash + amount
-      : draft.transactionType === 'WITHDRAW'
+      : isWithdrawal
         ? previousCash - amount
         : previousCash;
-  const positive = draft.transactionType === 'WITHDRAW' || draft.transactionType === 'FLOAT_TOP_UP';
+  const positive = isWithdrawal || draft.transactionType === 'FLOAT_TOP_UP';
   const invalidEmoney = nextEmoney < 0;
   const invalidCash = nextCash < 0;
   const invalidBalanceMessage = invalidEmoney ? 'Insufficient e-cash balance.' : invalidCash ? 'Insufficient cash at hand.' : '';
@@ -174,9 +175,8 @@ export function TransactionsDeskPage() {
                 Transaction Type
                 <select value={draft.transactionType} onChange={(e) => updateDraft('transactionType', e.target.value as TransactionType)}>
                   <option value="DEPOSIT">Deposit</option>
-                  <option value="WITHDRAW">Withdraw</option>
+                  <option value="FLOAT_WITHDRAWAL">Withdrawal</option>
                   <option value="FLOAT_TOP_UP">Float Top-up</option>
-                  <option value="FLOAT_WITHDRAWAL">Float Withdrawal</option>
                 </select>
               </label>
               <label>
