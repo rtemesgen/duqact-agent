@@ -6,7 +6,7 @@ import { DashboardKPICard } from '../components/DashboardKPICard';
 import { Modal } from '../components/Modal';
 import { formatCurrency, formatDateTime, transactionLabel } from '../lib/format';
 
-const blank = { accountId: 0, transactionType: 'DEPOSIT' as TransactionType, amount: 0, clientPhone: '', clientName: '' };
+const blank = { accountId: 0, transactionType: 'DEPOSIT' as TransactionType, amount: 0, clientPhone: '', clientId: '' };
 const PAGE_SIZE = 8;
 
 export function MNOWalletTransactionsPage() {
@@ -41,7 +41,7 @@ export function MNOWalletTransactionsPage() {
   }
 
   const filtered = useMemo(() => items.filter(item => {
-    const haystack = `${item.accountName} ${item.agentNumber} ${item.clientPhone} ${item.clientName} ${item.transactionType}`.toLowerCase();
+    const haystack = `${item.accountName} ${item.agentNumber} ${item.clientPhone} ${item.clientId ?? item.clientName ?? ''} ${item.transactionType}`.toLowerCase();
     return haystack.includes(search.toLowerCase());
   }), [items, search]);
 
@@ -121,7 +121,7 @@ export function MNOWalletTransactionsPage() {
             <label>Account<select value={edit.accountId} onChange={e => setEdit({ ...edit, accountId: Number(e.target.value) })}>{accounts.map(account => <option key={account.id} value={account.id}>{account.name} ({account.network})</option>)}</select></label>
             <label>Transaction Type<select value={edit.transactionType} onChange={e => setEdit({ ...edit, transactionType: e.target.value as TransactionType })}><option value="DEPOSIT">Deposit</option><option value="WITHDRAW">Withdraw</option><option value="FLOAT_TOP_UP">Float Top-up</option><option value="FLOAT_WITHDRAWAL">Float Withdrawal</option></select></label>
             <label>Amount (UGX)<input type="number" value={edit.amount} onChange={e => setEdit({ ...edit, amount: Number(e.target.value) })} min={0} /></label>
-            <label>Client ID<input value={edit.clientName} onChange={e => setEdit({ ...edit, clientName: e.target.value })} placeholder="Client ID" /></label>
+            <label>Client ID<input value={edit.clientId} onChange={e => setEdit({ ...edit, clientId: e.target.value })} placeholder="Client ID" /></label>
           </div>
           <div className="balancePreview">
             <div><span>Previous E-cash</span><strong>{formatCurrency(previousEmoney)}</strong></div>
@@ -139,7 +139,7 @@ export function MNOWalletTransactionsPage() {
             <div className="detailCard"><span>Account</span><strong>{selected.accountName || selected.mnoWalletName || '--'}</strong></div>
             <div className="detailCard"><span>Agent ID</span><strong>{selected.agentNumber || '--'}</strong></div>
             <div className="detailCard"><span>Client Phone</span><strong>{selected.clientPhone || '--'}</strong></div>
-            <div className="detailCard"><span>Client ID</span><strong>{selected.clientName || '--'}</strong></div>
+            <div className="detailCard"><span>Client ID</span><strong>{selected.clientId || selected.clientName || '--'}</strong></div>
             <div className="detailCard"><span>Status</span><strong>{selected.status}</strong></div>
             <div className="detailCard"><span>Transaction Type</span><strong>{transactionLabel(selected.transactionType)}</strong></div>
             <div className="detailCard"><span>Amount</span><strong className={selected.transactionType === 'WITHDRAW' ? 'tablePositive' : 'tableNegative'}>{formatCurrency(selected.amount)}</strong></div>

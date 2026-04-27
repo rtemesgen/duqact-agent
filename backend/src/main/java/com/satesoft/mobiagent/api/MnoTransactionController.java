@@ -22,12 +22,12 @@ class MnoTransactionController {
     private User currentUser(Authentication auth) { return users.findByEmail(auth.getName()).orElseThrow(); }
 }
 
-record TransactionRequest(Long accountId, Long walletId, TransactionType transactionType, BigDecimal amount, String clientPhone, String clientName) {}
+record TransactionRequest(Long accountId, TransactionType transactionType, BigDecimal amount, String clientPhone, String clientId, String clientName) {}
 
 @Service
 class TransactionService {
-    private final MnoAccountRepository accounts; private final MnoWalletRepository wallets; private final MnoTransactionRepository transactions; private final MnoProviderAdapter provider;
-    TransactionService(MnoAccountRepository accounts, MnoWalletRepository wallets, MnoTransactionRepository transactions, MnoProviderAdapter provider) { this.accounts = accounts; this.wallets = wallets; this.transactions = transactions; this.provider = provider; }
+    private final MnoAccountRepository accounts; private final MnoTransactionRepository transactions; private final MnoProviderAdapter provider;
+    TransactionService(MnoAccountRepository accounts, MnoTransactionRepository transactions, MnoProviderAdapter provider) { this.accounts = accounts; this.transactions = transactions; this.provider = provider; }
 
     @Transactional
     MnoTransaction record(TransactionRequest request, Long userId) {
@@ -35,7 +35,6 @@ class TransactionService {
         if (request.amount() == null || request.amount().signum() <= 0) throw new IllegalArgumentException("Amount must be positive");
         MnoAccount account = accounts.findById(request.accountId()).orElseThrow();
         if (!account.getUserId().equals(userId)) throw new IllegalArgumentException("Account not found");
-        MnoWallet wallet = resolveWallet(request, userId, account);
 
         BigDecimal previousEmoney = safe(account.getEmoneyAmount());
         BigDecimal previousCash = safe(account.getCashAtHand());
@@ -64,11 +63,13 @@ class TransactionService {
 
         MnoTransaction tx = new MnoTransaction();
         tx.setUserId(userId); tx.setAccountId(account.getId()); tx.setAccountName(account.getName());
-        tx.setWalletId(wallet == null ? null : wallet.getId()); tx.setMnoWalletName(wallet == null ? null : wallet.getName()); tx.setAgentNumber(account.getAgentId());
+        tx.setWalletId(null); tx.setMnoWalletName(null); tx.setAgentNumber(account.getAgentId());
         tx.setTransactionType(request.transactionType()); tx.setAmount(request.amount());
         tx.setPreviousEmoney(previousEmoney); tx.setNewEmoney(newEmoney); tx.setPreviousCashAtHand(previousCash); tx.setNewCashAtHand(newCash);
         tx.setPreviousBalance(previousEmoney); tx.setBalance(newEmoney);
-        tx.setDate(Instant.now()); tx.setClientPhone(request.clientPhone()); tx.setClientName(request.clientName()); tx.setStatus(TransactionStatus.PENDING);
+        tx.setDate(Instant.now()); tx.setClientPhone(request.clientPhone()); tx.setClientId(request.clientId());
+        tx.setClientName(request.clientName() != null && !request.clientName().isBlank() ? request.clientName() : request.clientId());
+        tx.setStatus(TransactionStatus.PENDING);
         tx = transactions.save(tx);
         tx.setStatus(TransactionStatus.PROCESSING);
         try {
@@ -77,28 +78,12 @@ class TransactionService {
             account.setEmoneyAmount(newEmoney);
             account.setCashAtHand(newCash);
             accounts.save(account);
-            if (wallet != null) {
-                wallet.setBalance(newEmoney);
-                wallets.save(wallet);
-            }
             tx.setStatus(TransactionStatus.COMPLETED);
             tx.setBalance(newEmoney);
         } catch (RuntimeException ex) {
             tx.setStatus(TransactionStatus.FAILED); transactions.save(tx); throw ex;
         }
         return transactions.save(tx);
-    }
-
-    private MnoWallet resolveWallet(TransactionRequest request, Long userId, MnoAccount account) {
-        if (request.walletId() != null) {
-            MnoWallet wallet = wallets.findById(request.walletId()).orElseThrow();
-            if (!wallet.getUserId().equals(userId)) throw new IllegalArgumentException("Wallet not found");
-            return wallet;
-        }
-        return wallets.findByUserId(userId).stream()
-                .filter(item -> item.getAgentId() != null && item.getAgentId().equals(account.getId()))
-                .findFirst()
-                .orElse(null);
     }
 
     private BigDecimal safe(BigDecimal value) {

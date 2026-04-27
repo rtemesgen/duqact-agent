@@ -10,7 +10,7 @@ public class MnoTransaction {
     private Long userId; private Long accountId; private String accountName; private Long walletId; private String mnoWalletName; private String agentNumber;
     @Enumerated(EnumType.STRING) private TransactionType transactionType;
     private BigDecimal amount; private BigDecimal previousBalance; private BigDecimal balance; private BigDecimal previousEmoney; private BigDecimal newEmoney; private BigDecimal previousCashAtHand; private BigDecimal newCashAtHand; private Instant date;
-    private String clientPhone; private String clientName;
+    private String clientPhone; private String clientId; private String clientName;
     @Enumerated(EnumType.STRING) private TransactionStatus status;
     public Long getId() { return id; } public Long getUserId() { return userId; } public void setUserId(Long userId) { this.userId = userId; }
     public Long getAccountId() { return accountId; } public void setAccountId(Long accountId) { this.accountId = accountId; } public String getAccountName() { return accountName; } public void setAccountName(String accountName) { this.accountName = accountName; }
@@ -22,6 +22,8 @@ public class MnoTransaction {
     public BigDecimal getNewEmoney() { return newEmoney; } public void setNewEmoney(BigDecimal newEmoney) { this.newEmoney = newEmoney; }
     public BigDecimal getPreviousCashAtHand() { return previousCashAtHand; } public void setPreviousCashAtHand(BigDecimal previousCashAtHand) { this.previousCashAtHand = previousCashAtHand; }
     public BigDecimal getNewCashAtHand() { return newCashAtHand; } public void setNewCashAtHand(BigDecimal newCashAtHand) { this.newCashAtHand = newCashAtHand; }
-    public String getClientPhone() { return clientPhone; } public void setClientPhone(String clientPhone) { this.clientPhone = clientPhone; } public String getClientName() { return clientName; } public void setClientName(String clientName) { this.clientName = clientName; }
+    public String getClientPhone() { return clientPhone; } public void setClientPhone(String clientPhone) { this.clientPhone = clientPhone; }
+    public String getClientId() { return clientId; } public void setClientId(String clientId) { this.clientId = clientId; }
+    public String getClientName() { return clientName; } public void setClientName(String clientName) { this.clientName = clientName; }
     public TransactionStatus getStatus() { return status; } public void setStatus(TransactionStatus status) { this.status = status; }
 }

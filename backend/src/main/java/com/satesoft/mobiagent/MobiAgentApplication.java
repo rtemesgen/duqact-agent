@@ -8,6 +8,8 @@ import com.satesoft.mobiagent.domain.ApiConnection;
 import com.satesoft.mobiagent.domain.ApiConnectionRepository;
 import com.satesoft.mobiagent.domain.ChannelType;
 import com.satesoft.mobiagent.domain.ChannelTypeRepository;
+import com.satesoft.mobiagent.domain.MnoAccount;
+import com.satesoft.mobiagent.domain.MnoAccountRepository;
 import com.satesoft.mobiagent.domain.MobiAgentShop;
 import com.satesoft.mobiagent.domain.MobiAgentShopRepository;
 import com.satesoft.mobiagent.domain.RoundingRule;
@@ -40,6 +42,7 @@ public class MobiAgentApplication {
 
     @Bean
     CommandLineRunner seedUsers(UserRepository users, AuthService authService, ChannelTypeRepository channelTypes, ServiceChannelRepository serviceChannels, CurrencyProfileRepository currencyProfiles,
+                                MnoAccountRepository accounts,
                                 ApiConnectionRepository apiConnections, MobiAgentShopRepository shops, ShopWorkerAssignmentRepository assignments,
                                 UserProfileRepository profiles, UserSettingsRepository settings) {
         return args -> {
@@ -74,6 +77,23 @@ public class MobiAgentApplication {
                         List.of(), List.of(), List.of(denomination("1000", "1,000", "Note"), denomination("500", "500", "Note"), denomination("100", "100", "Note"))));
                 currencyProfiles.save(createProfile(agent.getId(), "Tanzania", "TZ", "Tanzanian Shilling", "TZS", "TSh", 0,
                         List.of(), List.of(), List.of(denomination("10000", "10,000", "Note"), denomination("5000", "5,000", "Note"), denomination("1000", "1,000", "Note"))));
+            }
+
+            if (agent != null && accounts.findByUserId(agent.getId()).isEmpty()) {
+                MnoAccount account = new MnoAccount();
+                account.setUserId(agent.getId());
+                account.setName("MTN Agent");
+                account.setCountry("Uganda");
+                account.setMobileNumber("0763833834");
+                account.setAgentId("AGT-1234");
+                account.setNetwork("MTN Mobile Money");
+                account.setAccountType("MNO");
+                account.setCurrency("UGX");
+                account.setOpeningBalance(new BigDecimal("1000000"));
+                account.setEmoneyAmount(new BigDecimal("500000"));
+                account.setCashAtHand(new BigDecimal("500000"));
+                account.setRemarks("Seeded account for local and deployed transaction flows.");
+                accounts.save(account);
             }
 
             if (admin != null && apiConnections.findByUserIdOrderByCreatedAtAsc(admin.getId()).isEmpty()) {

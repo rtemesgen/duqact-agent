@@ -71,6 +71,7 @@ export function TransactionsDeskPage() {
         transactionType: draft.transactionType,
         amount,
         clientPhone: draft.clientPhone,
+        clientId: draft.clientId,
         clientName: draft.clientId,
       });
       setMessage('Transaction recorded.');
