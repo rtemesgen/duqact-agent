@@ -37,18 +37,32 @@ export function ExchangeRatePage() {
   const [deleteDenomsTarget, setDeleteDenomsTarget] = useState<CurrencyProfile | null>(null);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteRemarks, setDeleteRemarks] = useState('');
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [newValue, setNewValue] = useState('');
   const [newLabel, setNewLabel] = useState('');
   const [newType, setNewType] = useState<'Note' | 'Coin'>('Note');
   const [newStatus, setNewStatus] = useState<'Active' | 'Inactive'>('Active');
   const [editingDenomIndex, setEditingDenomIndex] = useState<number | null>(null);
 
-  const load = () => {
-    api.rates().then(setRates);
-    api.currencyProfiles().then(setProfiles);
+  const load = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [rateData, profileData] = await Promise.all([api.rates(), api.currencyProfiles()]);
+      setRates(rateData);
+      setProfiles(profileData);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Exchange data could not be loaded.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(load, []);
+  useEffect(() => {
+    void load();
+  }, []);
 
   const filteredRates = useMemo(
     () => rates.filter((item) => `${item.fromCurrency} ${item.toCurrency}`.toLowerCase().includes(rateSearch.toLowerCase())),
@@ -64,44 +78,79 @@ export function ExchangeRatePage() {
 
   async function saveRate() {
     if (!editRate) return;
-    await api.saveRate(editRate);
-    setEditRate(null);
-    load();
+    setError('');
+    setNotice('');
+    try {
+      await api.saveRate(editRate);
+      setEditRate(null);
+      setNotice(editRate.id ? 'Exchange rate updated.' : 'Exchange rate created.');
+      load();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Exchange rate could not be saved.');
+    }
   }
 
   async function saveProfile() {
     if (!editProfile) return;
-    await api.saveCurrencyProfile(editProfile);
-    setEditProfile(null);
-    load();
+    setError('');
+    setNotice('');
+    try {
+      await api.saveCurrencyProfile(editProfile);
+      setEditProfile(null);
+      setNotice(editProfile.id ? 'Currency profile updated.' : 'Currency profile created.');
+      load();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Currency profile could not be saved.');
+    }
   }
 
   async function saveDenominations() {
     if (!denomProfile) return;
-    await api.saveCurrencyProfile(denomProfile);
-    setDenomProfile(null);
-    setEditingDenomIndex(null);
-    setNewValue('');
-    setNewLabel('');
-    load();
+    setError('');
+    setNotice('');
+    try {
+      await api.saveCurrencyProfile(denomProfile);
+      setDenomProfile(null);
+      setEditingDenomIndex(null);
+      setNewValue('');
+      setNewLabel('');
+      setNotice('Denominations updated.');
+      load();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Denominations could not be saved.');
+    }
   }
 
   async function confirmDeleteRate() {
     if (!deleteRate) return;
-    await api.deleteRate(deleteRate.id!);
-    setDeleteRate(null);
-    setDeletePassword('');
-    setDeleteRemarks('');
-    load();
+    setError('');
+    setNotice('');
+    try {
+      await api.deleteRate(deleteRate.id!);
+      setDeleteRate(null);
+      setDeletePassword('');
+      setDeleteRemarks('');
+      setNotice('Exchange rate deleted.');
+      load();
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Exchange rate could not be deleted.');
+    }
   }
 
   async function clearDenominations() {
     if (!deleteDenomsTarget) return;
-    await api.saveCurrencyProfile({ ...deleteDenomsTarget, denominations: [] });
-    setDeleteDenomsTarget(null);
-    setDeletePassword('');
-    setDeleteRemarks('');
-    load();
+    setError('');
+    setNotice('');
+    try {
+      await api.saveCurrencyProfile({ ...deleteDenomsTarget, denominations: [] });
+      setDeleteDenomsTarget(null);
+      setDeletePassword('');
+      setDeleteRemarks('');
+      setNotice('Denominations cleared.');
+      load();
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Denominations could not be cleared.');
+    }
   }
 
   function addRule(target: 'upRules' | 'downRules') {
@@ -163,6 +212,9 @@ export function ExchangeRatePage() {
         </div>
       </div>
 
+      {notice && <p className="noticeBanner">{notice}</p>}
+      {error && <p className="errorBanner">{error}</p>}
+
       <div className="metricsGrid metricsGrid-four">
         <DashboardKPICard label="Currency Profiles" value={profiles.length} />
         <DashboardKPICard label="Currencies" value={distinctCurrencies} accent="gold" />
@@ -171,6 +223,10 @@ export function ExchangeRatePage() {
       </div>
 
       <section className="surfaceCard">
+        {loading ? (
+          <div className="surfaceCard surfaceCard-muted"><p className="pageLead">Loading exchange configuration...</p></div>
+        ) : (
+          <>
         <div className="tabRow">
           <button className={tab === 'profile' ? 'tabButton activeTab' : 'tabButton'} onClick={() => setTab('profile')}>Currency Profiles</button>
           <button className={tab === 'denominations' ? 'tabButton activeTab' : 'tabButton'} onClick={() => setTab('denominations')}>Denominations</button>
@@ -250,6 +306,8 @@ export function ExchangeRatePage() {
                 </tbody>
               </table>
             </div>
+          </>
+        )}
           </>
         )}
       </section>

@@ -31,8 +31,12 @@ export function TransactionsDeskPage() {
   const [draft, setDraft] = useState<Draft>(blankDraft);
   const [message, setMessage] = useState('');
   const [balancesVisible, setBalancesVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
+    setLoading(true);
+    setError('');
     api.accounts().then((accountData) => {
       setAccounts(accountData);
       const initialAccount = accountData[0];
@@ -40,6 +44,10 @@ export function TransactionsDeskPage() {
         ...current,
         accountId: initialAccount?.id ?? 0,
       }));
+    }).catch((loadError) => {
+      setError(loadError instanceof Error ? loadError.message : 'Accounts could not be loaded.');
+    }).finally(() => {
+      setLoading(false);
     });
   }, []);
 
@@ -116,7 +124,17 @@ export function TransactionsDeskPage() {
       </div>
 
       {message && <p className="noticeBanner">{message}</p>}
+      {error && <p className="errorBanner">{error}</p>}
 
+      {loading ? (
+        <section className="surfaceCard">
+          <p className="pageLead">Loading transaction desk...</p>
+        </section>
+      ) : accounts.length === 0 ? (
+        <section className="surfaceCard">
+          <p className="pageLead">No accounts are available yet. Create or seed an account before recording transactions.</p>
+        </section>
+      ) : (
       <div className="deskLayout">
         <section className="surfaceCard deskPanel">
           <div className="surfaceHead">
@@ -233,6 +251,7 @@ export function TransactionsDeskPage() {
           </div>
         </section>
       </div>
+      )}
     </section>
   );
 }

@@ -11,19 +11,39 @@ export function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [selected, setSelected] = useState<User | null>(null);
   const [editing, setEditing] = useState<User | null>(null);
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
-  const load = () => api.users().then(setUsers);
+  const load = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      setUsers(await api.users());
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Users could not be loaded.');
+    } finally {
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    load();
+    void load();
   }, []);
 
   async function saveRole() {
     if (!editing) return;
-    await api.setRole(editing.id, editing.role);
-    setEditing(null);
-    load();
+    setError('');
+    setNotice('');
+    try {
+      await api.setRole(editing.id, editing.role);
+      setEditing(null);
+      setNotice('User role updated.');
+      load();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'User role could not be updated.');
+    }
   }
 
   const filtered = useMemo(
@@ -57,6 +77,9 @@ export function AdminUsersPage() {
         </div>
       </div>
 
+      {notice && <p className="noticeBanner">{notice}</p>}
+      {error && <p className="errorBanner">{error}</p>}
+
       <div className="metricsGrid metricsGrid-four">
         <DashboardKPICard label="Total Users" value={users.length} />
         <DashboardKPICard label="Administrators" value={adminCount} accent="gold" />
@@ -72,6 +95,9 @@ export function AdminUsersPage() {
           </label>
         </div>
 
+        {loading ? (
+          <div className="surfaceCard surfaceCard-muted"><p className="pageLead">Loading users...</p></div>
+        ) : (
         <div className="tableWrap">
           <table className="workshopTable">
             <thead>
@@ -123,6 +149,7 @@ export function AdminUsersPage() {
             </tbody>
           </table>
         </div>
+        )}
 
         <div className="tableFooter">
           <p>

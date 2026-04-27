@@ -18,31 +18,59 @@ export function MNOWalletSettingsPage() {
   const [deleteTarget, setDeleteTarget] = useState<MnoWallet | null>(null);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteRemarks, setDeleteRemarks] = useState('');
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
-  const load = () => {
-    api.wallets().then(setWallets);
-    api.accounts().then(setAccounts);
-    api.dashboard().then(setStats);
+  const load = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [walletData, accountData, dashboardData] = await Promise.all([api.wallets(), api.accounts(), api.dashboard()]);
+      setWallets(walletData);
+      setAccounts(accountData);
+      setStats(dashboardData);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Wallets could not be loaded.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(load, []);
+  useEffect(() => {
+    void load();
+  }, []);
 
   async function save() {
     if (!edit) return;
-    await api.saveWallet(edit);
-    setEdit(null);
-    load();
+    setError('');
+    setNotice('');
+    try {
+      await api.saveWallet(edit);
+      setNotice(edit.id ? 'Wallet updated.' : 'Wallet created.');
+      setEdit(null);
+      load();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Wallet could not be saved.');
+    }
   }
 
   async function confirmDelete() {
     if (!deleteTarget) return;
-    await api.deleteWallet(deleteTarget.id!);
-    setDeletePassword('');
-    setDeleteRemarks('');
-    setDeleteTarget(null);
-    load();
+    setError('');
+    setNotice('');
+    try {
+      await api.deleteWallet(deleteTarget.id!);
+      setDeletePassword('');
+      setDeleteRemarks('');
+      setDeleteTarget(null);
+      setNotice('Wallet deleted.');
+      load();
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Wallet could not be deleted.');
+    }
   }
 
   const accountName = useMemo(() => new Map(accounts.map((account) => [account.id, account.name])), [accounts]);
@@ -81,6 +109,9 @@ export function MNOWalletSettingsPage() {
         </button>
       </div>
 
+      {notice && <p className="noticeBanner">{notice}</p>}
+      {error && <p className="errorBanner">{error}</p>}
+
       <div className="metricsGrid metricsGrid-four">
         <DashboardKPICard label="Wallet Count" value={stats?.walletCount ?? 0} />
         <DashboardKPICard label="Total Wallet Balance" value={formatCurrency(stats?.totalWalletBalance)} accent="gold" />
@@ -96,6 +127,9 @@ export function MNOWalletSettingsPage() {
           </label>
         </div>
 
+        {loading ? (
+          <div className="surfaceCard surfaceCard-muted"><p className="pageLead">Loading wallets...</p></div>
+        ) : (
         <div className="tableWrap">
           <table className="workshopTable">
             <thead>
@@ -146,6 +180,7 @@ export function MNOWalletSettingsPage() {
             </tbody>
           </table>
         </div>
+        )}
 
         <div className="tableFooter">
           <p>

@@ -68,7 +68,7 @@ export function DashboardPage() {
           <div className="surfaceHead"><h2>Operations Footprint</h2></div>
           <div className="miniStats">
             <div><span>Accounts</span><strong>{stats?.accountCount ?? 0}</strong></div>
-            <div><span>Linked Wallet Records</span><strong>{stats?.walletCount ?? 0}</strong></div>
+            <div><span>Legacy Linked Records</span><strong>{stats?.walletCount ?? 0}</strong></div>
             <div><span>Channel Types</span><strong>{stats?.channelTypeCount ?? 0}</strong></div>
             <div><span>Service Channels</span><strong>{stats?.serviceChannelCount ?? 0}</strong></div>
           </div>
@@ -78,7 +78,7 @@ export function DashboardPage() {
           <div className="miniStats">
             <div><span>Total E-money</span><strong>{formatCurrency(stats?.totalEmoney)}</strong></div>
             <div><span>Cash At Hand</span><strong>{formatCurrency(stats?.totalCashAtHand)}</strong></div>
-            <div><span>Ledger Mirror</span><strong>{formatCurrency(stats?.totalWalletBalance)}</strong></div>
+            <div><span>Compatibility Mirror</span><strong>{formatCurrency(stats?.totalWalletBalance)}</strong></div>
             <div><span>Net E-cash Change</span><strong>{formatCurrency(stats?.netFloatChange)}</strong></div>
           </div>
         </section>

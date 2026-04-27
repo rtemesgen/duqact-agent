@@ -171,6 +171,10 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 .surfaceCard {
   background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 1.15rem; box-shadow: var(--shadow);
 }
+.surfaceCard-muted {
+  background: rgba(255,255,255,.02);
+  border-style: dashed;
+}
 .surfaceHead { display: flex; justify-content: space-between; align-items: center; margin-bottom: .95rem; }
 .surfaceHead h2 { margin: 0; font-size: 1.05rem; }
 .panelGrid { display: grid; gap: 1rem; }
@@ -770,6 +774,10 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   .tableFooter { flex-direction: column; align-items: stretch; }
   .paginationControls { justify-content: space-between; }
   .profileHeaderActions { width: 100%; flex-direction: column; }
+  .contentTopbar { flex-wrap: wrap; gap: .75rem; align-items: flex-start; }
+  .topbarLeft, .topbarRight { width: 100%; }
+  .topbarRight { justify-content: space-between; }
+  .topbarMeta-globe { display: none; }
 }
 
 
@@ -939,6 +947,19 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
     padding: .7rem .85rem;
   }
 
+  .summaryPanelHeader,
+  .summaryPanelItem,
+  .receiptSplit,
+  .receiptRows div {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .summaryPanelValue,
+  .receiptType {
+    text-align: left;
+  }
+
   .deskPanel {
     min-height: auto;
   }
@@ -969,7 +990,7 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   }
 
   .workshopTable {
-    min-width: 640px;
+    min-width: 560px;
   }
 
   .workshopTable th,
@@ -1068,7 +1089,49 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
     gap: .55rem;
   }
 
+  .userChip strong {
+    font-size: .86rem;
+  }
+
   .userChip span {
     font-size: .76rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .contentTopbar,
+  .workshopMain {
+    padding-left: .85rem;
+    padding-right: .85rem;
+  }
+
+  .surfaceCard,
+  .metricCard,
+  .summaryPanel,
+  .detailCard,
+  .authForm,
+  .authStats div {
+    padding: .85rem;
+  }
+
+  .pageHero h1 {
+    font-size: 1.42rem;
+  }
+
+  .workshopTable {
+    min-width: 520px;
+  }
+
+  .tableWrap {
+    margin-left: -.1rem;
+    margin-right: -.1rem;
+  }
+
+  .userChip strong,
+  .userChip span {
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }

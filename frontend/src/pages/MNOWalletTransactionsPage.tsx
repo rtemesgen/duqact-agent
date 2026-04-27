@@ -16,27 +16,45 @@ export function MNOWalletTransactionsPage() {
   const [edit, setEdit] = useState<typeof blank | null>(null);
   const [selected, setSelected] = useState<MnoTransaction | null>(null);
   const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
-  const load = () => {
-    api.accounts().then(setAccounts);
-    api.transactions().then(setItems);
-    api.dashboard().then(setStats);
+  const load = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [accountData, transactionData, dashboardData] = await Promise.all([
+        api.accounts(),
+        api.transactions(),
+        api.dashboard(),
+      ]);
+      setAccounts(accountData);
+      setItems(transactionData);
+      setStats(dashboardData);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Transactions could not be loaded.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(load, []);
+  useEffect(() => {
+    void load();
+  }, []);
 
   async function save() {
     if (!edit) return;
     setMessage('');
+    setError('');
     try {
       await api.recordTransaction(edit);
       setMessage('Transaction recorded');
       setEdit(null);
       load();
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : 'Transaction failed');
+      setError(error instanceof Error ? error.message : 'Transaction failed');
     }
   }
 
@@ -75,6 +93,7 @@ export function MNOWalletTransactionsPage() {
       </div>
 
       {message && <p className="noticeBanner">{message}</p>}
+      {error && <p className="errorBanner">{error}</p>}
 
       <section className="surfaceCard">
         <div className="toolbarRow">
@@ -82,6 +101,9 @@ export function MNOWalletTransactionsPage() {
           <button className="primaryButton" onClick={() => setEdit({ ...blank, accountId: accounts[0]?.id ?? 0 })}><Plus size={18} />Record Transaction</button>
         </div>
 
+        {loading ? (
+          <div className="surfaceCard surfaceCard-muted"><p className="pageLead">Loading transactions...</p></div>
+        ) : (
         <div className="tableWrap">
           <table className="workshopTable">
             <thead><tr><th>Date</th><th>Account</th><th>Agent ID</th><th>Client Phone</th><th>Type</th><th>Amount</th><th>Prev. E-cash</th><th>New E-cash</th><th>Actions</th></tr></thead>
@@ -103,6 +125,7 @@ export function MNOWalletTransactionsPage() {
             </tbody>
           </table>
         </div>
+        )}
 
         <div className="tableFooter">
           <p>Showing {filtered.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1} to {Math.min(filtered.length, page * PAGE_SIZE)} of {filtered.length} transactions</p>

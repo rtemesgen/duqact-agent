@@ -30,30 +30,58 @@ export function MobiAgentSettingsPage() {
   const [deleteTarget, setDeleteTarget] = useState<MnoAccount | null>(null);
   const [deletePassword, setDeletePassword] = useState('');
   const [deleteRemarks, setDeleteRemarks] = useState('');
+  const [notice, setNotice] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
-  const load = () => {
-    api.accounts().then(setItems);
-    api.dashboard().then(setStats);
+  const load = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [accountData, dashboardData] = await Promise.all([api.accounts(), api.dashboard()]);
+      setItems(accountData);
+      setStats(dashboardData);
+    } catch (loadError) {
+      setError(loadError instanceof Error ? loadError.message : 'Accounts could not be loaded.');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(load, []);
+  useEffect(() => {
+    void load();
+  }, []);
 
   async function save() {
     if (!edit) return;
-    await api.saveAccount(edit);
-    setEdit(null);
-    load();
+    setError('');
+    setNotice('');
+    try {
+      await api.saveAccount(edit);
+      setNotice(edit.id ? 'Account updated.' : 'Account created.');
+      setEdit(null);
+      load();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Account could not be saved.');
+    }
   }
 
   async function confirmDelete() {
     if (!deleteTarget) return;
-    await api.deleteAccount(deleteTarget.id!);
-    setDeletePassword('');
-    setDeleteRemarks('');
-    setDeleteTarget(null);
-    load();
+    setError('');
+    setNotice('');
+    try {
+      await api.deleteAccount(deleteTarget.id!);
+      setDeletePassword('');
+      setDeleteRemarks('');
+      setDeleteTarget(null);
+      setNotice('Account deleted.');
+      load();
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'Account could not be deleted.');
+    }
   }
 
   const filtered = useMemo(
@@ -93,6 +121,9 @@ export function MobiAgentSettingsPage() {
         </button>
       </div>
 
+      {notice && <p className="noticeBanner">{notice}</p>}
+      {error && <p className="errorBanner">{error}</p>}
+
       <div className="metricsGrid metricsGrid-four">
         <DashboardKPICard label="Number of Networks" value={totalNetworks} />
         <DashboardKPICard label="Cash At Hand" value={formatCurrency(stats?.totalCashAtHand)} accent="green" />
@@ -108,6 +139,9 @@ export function MobiAgentSettingsPage() {
           </label>
         </div>
 
+        {loading ? (
+          <div className="surfaceCard surfaceCard-muted"><p className="pageLead">Loading accounts...</p></div>
+        ) : (
         <div className="tableWrap">
           <table className="workshopTable">
             <thead>
@@ -162,6 +196,7 @@ export function MobiAgentSettingsPage() {
             </tbody>
           </table>
         </div>
+        )}
 
         <div className="tableFooter">
           <p>
