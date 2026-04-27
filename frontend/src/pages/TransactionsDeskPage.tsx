@@ -64,6 +64,9 @@ export function TransactionsDeskPage() {
         ? previousCash - amount
         : previousCash;
   const positive = draft.transactionType === 'WITHDRAW' || draft.transactionType === 'FLOAT_TOP_UP';
+  const invalidEmoney = nextEmoney < 0;
+  const invalidCash = nextCash < 0;
+  const invalidBalanceMessage = invalidEmoney ? 'Insufficient e-cash balance.' : invalidCash ? 'Insufficient cash at hand.' : '';
 
   const accountCards = useMemo(() => accounts.map((account) => ({
     account,
@@ -198,9 +201,10 @@ export function TransactionsDeskPage() {
               <div><span>Previous Cash at Hand</span><strong>{maskedCurrency(previousCash, balancesVisible)}</strong></div>
               <div><span>New Cash at Hand</span><strong>{maskedCurrency(nextCash, balancesVisible)}</strong></div>
             </div>
+            {invalidBalanceMessage && <p className="errorBanner">{invalidBalanceMessage}</p>}
             <div className="workshopModalActions deskActions">
               <button type="button" className="secondaryButton" onClick={resetDraft}>Cancel</button>
-              <button type="button" className="primaryButton" onClick={recordTransaction} disabled={!draft.amount || !selectedAccount || !draft.accountId}>Record Transaction</button>
+              <button type="button" className="primaryButton" onClick={recordTransaction} disabled={!draft.amount || !selectedAccount || !draft.accountId || invalidEmoney || invalidCash}>Record Transaction</button>
             </div>
           </div>
         </section>
@@ -238,9 +242,9 @@ export function TransactionsDeskPage() {
                     <div><span>Client ID</span><strong>{draft.clientId || 'N/A'}</strong></div>
                     <div><span>Phone</span><strong>{draft.clientPhone || 'N/A'}</strong></div>
                     <div><span>Amount</span><strong className="accentText">{formatCurrency(amount)}</strong></div>
-                    <div><span>E-cash After</span><strong>{maskedCurrency(nextEmoney, balancesVisible)}</strong></div>
-                    <div><span>Cash at Hand After</span><strong>{maskedCurrency(nextCash, balancesVisible)}</strong></div>
-                  </div>
+                      <div><span>E-cash After</span><strong>{invalidEmoney ? 'Unavailable' : maskedCurrency(nextEmoney, balancesVisible)}</strong></div>
+                      <div><span>Cash at Hand After</span><strong>{invalidCash ? 'Unavailable' : maskedCurrency(nextCash, balancesVisible)}</strong></div>
+                    </div>
                   <div className="receiptSignature">
                     <div />
                     <p>Digital Signature Validated</p>

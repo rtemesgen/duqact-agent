@@ -72,6 +72,9 @@ export function MNOWalletTransactionsPage() {
   const amount = Number(edit?.amount ?? 0);
   const nextEmoney = edit?.transactionType === 'DEPOSIT' ? previousEmoney - amount : edit?.transactionType === 'WITHDRAW' ? previousEmoney + amount : edit?.transactionType === 'FLOAT_TOP_UP' ? previousEmoney + amount : previousEmoney - amount;
   const nextCash = edit?.transactionType === 'DEPOSIT' ? previousCash + amount : edit?.transactionType === 'WITHDRAW' ? previousCash - amount : previousCash;
+  const invalidEmoney = nextEmoney < 0;
+  const invalidCash = nextCash < 0;
+  const invalidBalanceMessage = invalidEmoney ? 'Insufficient e-cash balance.' : invalidCash ? 'Insufficient cash at hand.' : '';
 
   useEffect(() => {
     setPage(1);
@@ -148,10 +151,11 @@ export function MNOWalletTransactionsPage() {
           </div>
           <div className="balancePreview">
             <div><span>Previous E-cash</span><strong>{formatCurrency(previousEmoney)}</strong></div>
-            <div><span>New E-cash</span><strong>{formatCurrency(nextEmoney)}</strong></div>
+            <div><span>New E-cash</span><strong>{invalidEmoney ? 'Unavailable' : formatCurrency(nextEmoney)}</strong></div>
             <div><span>Previous Cash at Hand</span><strong>{formatCurrency(previousCash)}</strong></div>
-            <div><span>New Cash at Hand</span><strong>{formatCurrency(nextCash)}</strong></div>
+            <div><span>New Cash at Hand</span><strong>{invalidCash ? 'Unavailable' : formatCurrency(nextCash)}</strong></div>
           </div>
+          {invalidBalanceMessage && <p className="errorBanner">{invalidBalanceMessage}</p>}
         </Modal>
       )}
 
