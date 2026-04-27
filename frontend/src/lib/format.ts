@@ -13,11 +13,12 @@ export function initials(name: string) {
   return parts.map(part => part[0]?.toUpperCase() ?? '').join('') || 'MA';
 }
 
-export function transactionLabel(type: 'FLOAT_TOP_UP' | 'FLOAT_WITHDRAWAL' | 'DEPOSIT' | 'FLOAT_TRANSFER') {
+export function transactionLabel(type: 'FLOAT_TOP_UP' | 'FLOAT_WITHDRAWAL' | 'DEPOSIT' | 'WITHDRAW' | 'FLOAT_TRANSFER') {
   switch (type) {
     case 'FLOAT_TOP_UP': return 'FLOAT TOP-UP';
     case 'FLOAT_WITHDRAWAL': return 'FLOAT WITHDRAWAL';
     case 'DEPOSIT': return 'DEPOSIT';
+    case 'WITHDRAW': return 'WITHDRAW';
     case 'FLOAT_TRANSFER': return 'FLOAT TRANSFER';
   }
 }

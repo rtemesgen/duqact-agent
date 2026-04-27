@@ -1,12 +1,11 @@
-﻿import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Eye, EyeOff, History, Search } from 'lucide-react';
 import { api } from '../api/client';
-import type { MnoAccount, MnoWallet, TransactionType } from '../api/types';
+import type { MnoAccount, TransactionType } from '../api/types';
 import { formatCurrency, transactionLabel } from '../lib/format';
 
 type Draft = {
   accountId: number;
-  walletId: number;
   transactionType: TransactionType;
   amount: string;
   clientPhone: string;
@@ -16,7 +15,6 @@ type Draft = {
 
 const blankDraft: Draft = {
   accountId: 0,
-  walletId: 0,
   transactionType: 'DEPOSIT',
   amount: '',
   clientPhone: '',
@@ -30,42 +28,34 @@ function maskedCurrency(value: number, visible: boolean) {
 
 export function TransactionsDeskPage() {
   const [accounts, setAccounts] = useState<MnoAccount[]>([]);
-  const [wallets, setWallets] = useState<MnoWallet[]>([]);
   const [draft, setDraft] = useState<Draft>(blankDraft);
   const [message, setMessage] = useState('');
   const [balancesVisible, setBalancesVisible] = useState(false);
 
   useEffect(() => {
-    Promise.all([api.accounts(), api.wallets()]).then(([accountData, walletData]) => {
+    api.accounts().then((accountData) => {
       setAccounts(accountData);
-      setWallets(walletData);
       const initialAccount = accountData[0];
-      const initialWallet = walletData.find((item) => item.agentId === initialAccount?.id) ?? walletData[0];
       setDraft((current) => ({
         ...current,
         accountId: initialAccount?.id ?? 0,
-        walletId: initialWallet?.id ?? 0,
-        clientId: '',
       }));
     });
   }, []);
 
   const selectedAccount = accounts.find((account) => account.id === draft.accountId) ?? accounts[0];
-  const selectedWallet = wallets.find((wallet) => wallet.id === draft.walletId);
   const amount = Number(draft.amount || 0);
-  const positive = draft.transactionType === 'FLOAT_TOP_UP' || draft.transactionType === 'FLOAT_WITHDRAWAL';
-  const previousBalance = Number(selectedWallet?.balance ?? selectedAccount?.emoneyAmount ?? 0);
-  const newBalance = positive ? previousBalance + amount : previousBalance - amount;
-
-  useEffect(() => {
-    if (!selectedAccount) return;
-    const nextWallet = wallets.find((wallet) => wallet.agentId === selectedAccount.id);
-    setDraft((current) => ({
-      ...current,
-      accountId: selectedAccount.id ?? 0,
-      walletId: nextWallet?.id ?? current.walletId,
-    }));
-  }, [selectedAccount?.id, wallets]);
+  const previousEmoney = Number(selectedAccount?.emoneyAmount ?? 0);
+  const previousCash = Number(selectedAccount?.cashAtHand ?? 0);
+  const emoneyDirection = draft.transactionType === 'DEPOSIT' || draft.transactionType === 'FLOAT_WITHDRAWAL' || draft.transactionType === 'FLOAT_TRANSFER' ? -1 : 1;
+  const nextEmoney = previousEmoney + (amount * emoneyDirection);
+  const nextCash =
+    draft.transactionType === 'DEPOSIT'
+      ? previousCash + amount
+      : draft.transactionType === 'WITHDRAW'
+        ? previousCash - amount
+        : previousCash;
+  const positive = draft.transactionType === 'WITHDRAW' || draft.transactionType === 'FLOAT_TOP_UP';
 
   const accountCards = useMemo(() => accounts.map((account) => ({
     account,
@@ -74,19 +64,18 @@ export function TransactionsDeskPage() {
   })), [accounts, draft.accountId]);
 
   async function recordTransaction() {
-    if (!selectedWallet?.id || !draft.amount || !selectedAccount) return;
+    if (!draft.accountId || !draft.amount || !selectedAccount) return;
     try {
       await api.recordTransaction({
-        walletId: selectedWallet.id,
+        accountId: draft.accountId,
         transactionType: draft.transactionType,
         amount,
-        agentNumber: selectedAccount.agentId || selectedAccount.name,
         clientPhone: draft.clientPhone,
         clientName: draft.clientId,
       });
       setMessage('Transaction recorded.');
-      const refreshedWallets = await api.wallets();
-      setWallets(refreshedWallets);
+      const refreshedAccounts = await api.accounts();
+      setAccounts(refreshedAccounts);
       setDraft((current) => ({
         ...current,
         amount: '',
@@ -95,8 +84,8 @@ export function TransactionsDeskPage() {
         remarks: '',
       }));
       setBalancesVisible(false);
-    } catch {
-      setMessage('Transaction failed.');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Transaction failed.');
     }
   }
 
@@ -121,7 +110,7 @@ export function TransactionsDeskPage() {
         <div>
           <p className="eyebrow">Operations</p>
           <h1>Transactions Desk</h1>
-          <p className="pageLead">Record a transaction from a single operational desk with form-first entry, protected balances, and live preview.</p>
+          <p className="pageLead">Record account-based deposits and withdrawals with live e-cash and cash-at-hand preview.</p>
         </div>
       </div>
 
@@ -134,6 +123,14 @@ export function TransactionsDeskPage() {
             <div className="topbarMeta topbarMeta-globe"><History size={16} /><span>Active Session</span></div>
           </div>
           <div className="formGrid">
+            <label>
+              Account
+              <select value={draft.accountId} onChange={(e) => updateDraft('accountId', Number(e.target.value))}>
+                {accounts.map((account) => (
+                  <option key={account.id} value={account.id}>{account.name} ({account.network})</option>
+                ))}
+              </select>
+            </label>
             <div className="accountCardGrid">
               {accountCards.map(({ account, active, channel }) => (
                 <button key={account.id} type="button" className={active ? 'accountChoice accountChoiceActive' : 'accountChoice'} onClick={() => updateDraft('accountId', account.id ?? 0)}>
@@ -155,9 +152,9 @@ export function TransactionsDeskPage() {
                 Transaction Type
                 <select value={draft.transactionType} onChange={(e) => updateDraft('transactionType', e.target.value as TransactionType)}>
                   <option value="DEPOSIT">Deposit</option>
-                  <option value="FLOAT_TRANSFER">Withdrawal</option>
-                  <option value="FLOAT_TOP_UP">Float top-up</option>
-                  <option value="FLOAT_WITHDRAWAL">Float withdrawal</option>
+                  <option value="WITHDRAW">Withdraw</option>
+                  <option value="FLOAT_TOP_UP">Float Top-up</option>
+                  <option value="FLOAT_WITHDRAWAL">Float Withdrawal</option>
                 </select>
               </label>
               <label>
@@ -177,12 +174,14 @@ export function TransactionsDeskPage() {
               </button>
             </div>
             <div className="balancePreview">
-              <div><span>Previous Balance</span><strong>{maskedCurrency(previousBalance, balancesVisible)}</strong></div>
-              <div><span>New Balance</span><strong>{maskedCurrency(newBalance, balancesVisible)}</strong></div>
+              <div><span>Previous E-cash</span><strong>{maskedCurrency(previousEmoney, balancesVisible)}</strong></div>
+              <div><span>New E-cash</span><strong>{maskedCurrency(nextEmoney, balancesVisible)}</strong></div>
+              <div><span>Previous Cash at Hand</span><strong>{maskedCurrency(previousCash, balancesVisible)}</strong></div>
+              <div><span>New Cash at Hand</span><strong>{maskedCurrency(nextCash, balancesVisible)}</strong></div>
             </div>
             <div className="workshopModalActions deskActions">
               <button type="button" className="secondaryButton" onClick={resetDraft}>Cancel</button>
-              <button type="button" className="primaryButton" onClick={recordTransaction} disabled={!draft.amount || !selectedWallet || !selectedAccount}>Record Transaction</button>
+              <button type="button" className="primaryButton" onClick={recordTransaction} disabled={!draft.amount || !selectedAccount || !draft.accountId}>Record Transaction</button>
             </div>
           </div>
         </section>
@@ -220,7 +219,8 @@ export function TransactionsDeskPage() {
                     <div><span>Client ID</span><strong>{draft.clientId || 'N/A'}</strong></div>
                     <div><span>Phone</span><strong>{draft.clientPhone || 'N/A'}</strong></div>
                     <div><span>Amount</span><strong className="accentText">{formatCurrency(amount)}</strong></div>
-                    <div><span>Running Balance</span><strong>{maskedCurrency(newBalance, balancesVisible)}</strong></div>
+                    <div><span>E-cash After</span><strong>{maskedCurrency(nextEmoney, balancesVisible)}</strong></div>
+                    <div><span>Cash at Hand After</span><strong>{maskedCurrency(nextCash, balancesVisible)}</strong></div>
                   </div>
                   <div className="receiptSignature">
                     <div />
@@ -235,4 +235,3 @@ export function TransactionsDeskPage() {
     </section>
   );
 }
-

@@ -1,16 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Eye, Plus, Search } from 'lucide-react';
 import { api } from '../api/client';
-import type { DashboardStats, MnoTransaction, MnoWallet, TransactionType } from '../api/types';
+import type { DashboardStats, MnoAccount, MnoTransaction, TransactionType } from '../api/types';
 import { DashboardKPICard } from '../components/DashboardKPICard';
 import { Modal } from '../components/Modal';
 import { formatCurrency, formatDateTime, transactionLabel } from '../lib/format';
 
-const blank = { walletId: 0, transactionType: 'FLOAT_TOP_UP' as TransactionType, amount: 0, agentNumber: '', clientPhone: '', clientName: '' };
+const blank = { accountId: 0, transactionType: 'DEPOSIT' as TransactionType, amount: 0, clientPhone: '', clientName: '' };
 const PAGE_SIZE = 8;
 
 export function MNOWalletTransactionsPage() {
-  const [wallets, setWallets] = useState<MnoWallet[]>([]);
+  const [accounts, setAccounts] = useState<MnoAccount[]>([]);
   const [items, setItems] = useState<MnoTransaction[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [edit, setEdit] = useState<typeof blank | null>(null);
@@ -20,7 +20,7 @@ export function MNOWalletTransactionsPage() {
   const [page, setPage] = useState(1);
 
   const load = () => {
-    api.wallets().then(setWallets);
+    api.accounts().then(setAccounts);
     api.transactions().then(setItems);
     api.dashboard().then(setStats);
   };
@@ -35,23 +35,25 @@ export function MNOWalletTransactionsPage() {
       setMessage('Transaction recorded');
       setEdit(null);
       load();
-    } catch {
-      setMessage('Transaction failed');
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Transaction failed');
     }
   }
 
   const filtered = useMemo(() => items.filter(item => {
-    const haystack = `${item.mnoWalletName} ${item.agentNumber} ${item.clientPhone} ${item.clientName} ${item.transactionType}`.toLowerCase();
+    const haystack = `${item.accountName} ${item.agentNumber} ${item.clientPhone} ${item.clientName} ${item.transactionType}`.toLowerCase();
     return haystack.includes(search.toLowerCase());
   }), [items, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paged = useMemo(() => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE), [filtered, page]);
 
-  const currentWallet = wallets.find(wallet => wallet.id === edit?.walletId);
-  const previousBalance = Number(currentWallet?.balance ?? 0);
+  const currentAccount = accounts.find(account => account.id === edit?.accountId);
+  const previousEmoney = Number(currentAccount?.emoneyAmount ?? 0);
+  const previousCash = Number(currentAccount?.cashAtHand ?? 0);
   const amount = Number(edit?.amount ?? 0);
-  const nextBalance = (edit?.transactionType === 'FLOAT_TOP_UP' || edit?.transactionType === 'FLOAT_WITHDRAWAL') ? previousBalance + amount : previousBalance - amount;
+  const nextEmoney = edit?.transactionType === 'DEPOSIT' ? previousEmoney - amount : edit?.transactionType === 'WITHDRAW' ? previousEmoney + amount : edit?.transactionType === 'FLOAT_TOP_UP' ? previousEmoney + amount : previousEmoney - amount;
+  const nextCash = edit?.transactionType === 'DEPOSIT' ? previousCash + amount : edit?.transactionType === 'WITHDRAW' ? previousCash - amount : previousCash;
 
   useEffect(() => {
     setPage(1);
@@ -66,9 +68,9 @@ export function MNOWalletTransactionsPage() {
       <div className="pageHero"><div><p className="eyebrow">Agent Operations</p><h1>Mobi Transactions</h1></div></div>
 
       <div className="metricsGrid metricsGrid-four">
-        <DashboardKPICard label="Total Top-ups" value={formatCurrency(stats?.totalDeposits)} hint="Completed deposits" accent="green" />
-        <DashboardKPICard label="Total Withdrawals" value={formatCurrency(stats?.totalWithdrawals)} hint="Completed withdrawals" />
-        <DashboardKPICard label="Net Float Change" value={formatCurrency(stats?.netFloatChange)} hint="Deposits minus withdrawals" accent="gold" />
+        <DashboardKPICard label="Total Deposits" value={formatCurrency(stats?.totalDeposits)} hint="E-cash reduced, cash increased" accent="green" />
+        <DashboardKPICard label="Total Withdrawals" value={formatCurrency(stats?.totalWithdrawals)} hint="Cash reduced, e-cash increased" />
+        <DashboardKPICard label="Net E-cash Change" value={formatCurrency(stats?.netFloatChange)} hint="Withdrawals minus deposits" accent="gold" />
         <DashboardKPICard label="Transaction Count" value={stats?.transactionCount ?? 0} hint="Recorded transactions" />
       </div>
 
@@ -77,23 +79,23 @@ export function MNOWalletTransactionsPage() {
       <section className="surfaceCard">
         <div className="toolbarRow">
           <label className="searchField"><Search size={16} /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search transactions..." /></label>
-          <button className="primaryButton" onClick={() => setEdit({ ...blank, walletId: wallets[0]?.id ?? 0 })}><Plus size={18} />Record Transaction</button>
+          <button className="primaryButton" onClick={() => setEdit({ ...blank, accountId: accounts[0]?.id ?? 0 })}><Plus size={18} />Record Transaction</button>
         </div>
 
         <div className="tableWrap">
           <table className="workshopTable">
-            <thead><tr><th>Date</th><th>Wallet</th><th>Agent ID</th><th>Client Phone</th><th>Type</th><th>Amount</th><th>Prev. Balance</th><th>New Balance</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Date</th><th>Account</th><th>Agent ID</th><th>Client Phone</th><th>Type</th><th>Amount</th><th>Prev. E-cash</th><th>New E-cash</th><th>Actions</th></tr></thead>
             <tbody>
               {paged.map(item => (
                 <tr key={item.id}>
                   <td>{formatDateTime(item.date)}</td>
-                  <td>{item.mnoWalletName}</td>
+                  <td>{item.accountName || item.mnoWalletName || '--'}</td>
                   <td>{item.agentNumber || '--'}</td>
                   <td>{item.clientPhone || '--'}</td>
-                  <td><span className={`statusPill ${item.transactionType === 'FLOAT_TOP_UP' || item.transactionType === 'FLOAT_WITHDRAWAL' ? 'statusPositive' : 'statusNeutral'}`}>{transactionLabel(item.transactionType)}</span></td>
-                  <td className={item.transactionType === 'FLOAT_TOP_UP' || item.transactionType === 'FLOAT_WITHDRAWAL' ? 'tablePositive' : 'tableNegative'}>{item.transactionType === 'FLOAT_TOP_UP' || item.transactionType === 'FLOAT_WITHDRAWAL' ? '+' : '-'}{formatCurrency(item.amount)}</td>
-                  <td>{formatCurrency(item.previousBalance)}</td>
-                  <td className="tableStrong">{formatCurrency(item.balance)}</td>
+                  <td><span className={`statusPill ${item.transactionType === 'WITHDRAW' ? 'statusPositive' : 'statusNeutral'}`}>{transactionLabel(item.transactionType)}</span></td>
+                  <td className={item.transactionType === 'WITHDRAW' ? 'tablePositive' : 'tableNegative'}>{item.transactionType === 'WITHDRAW' ? '+' : '-'}{formatCurrency(item.amount)}</td>
+                  <td>{formatCurrency(item.previousEmoney ?? item.previousBalance)}</td>
+                  <td className="tableStrong">{formatCurrency(item.newEmoney ?? item.balance)}</td>
                   <td><button type="button" className="iconButton" aria-label="View transaction" onClick={() => setSelected(item)}><Eye size={16} /></button></td>
                 </tr>
               ))}
@@ -115,14 +117,18 @@ export function MNOWalletTransactionsPage() {
       {edit && (
         <Modal title="Record Transaction" onClose={() => setEdit(null)} onSubmit={e => { e.preventDefault(); save(); }} submitLabel="Record Transaction" size="lg">
           <div className="formGrid formGrid-two">
-            <label>Phone Number<input value={edit.clientPhone} onChange={e => setEdit({ ...edit, clientPhone: e.target.value, clientName: e.target.value.length > 5 ? 'Verified Client Name' : '' })} placeholder="+256..." /></label>
-            <label>Channel Name<select value={edit.walletId} onChange={e => setEdit({ ...edit, walletId: Number(e.target.value) })}>{wallets.map(wallet => <option key={wallet.id} value={wallet.id}>{wallet.name} ({wallet.network})</option>)}</select></label>
-            <label>Transaction Type<select value={edit.transactionType} onChange={e => setEdit({ ...edit, transactionType: e.target.value as TransactionType })}><option value="FLOAT_TOP_UP">Float Top-up</option><option value="FLOAT_WITHDRAWAL">Float Withdrawal</option><option value="DEPOSIT">Deposit</option><option value="FLOAT_TRANSFER">Float Transfer</option></select></label>
-            <label>Agent Number<input value={edit.agentNumber} onChange={e => setEdit({ ...edit, agentNumber: e.target.value })} placeholder="AGT-001" /></label>
+            <label>Phone Number<input value={edit.clientPhone} onChange={e => setEdit({ ...edit, clientPhone: e.target.value })} placeholder="+256..." /></label>
+            <label>Account<select value={edit.accountId} onChange={e => setEdit({ ...edit, accountId: Number(e.target.value) })}>{accounts.map(account => <option key={account.id} value={account.id}>{account.name} ({account.network})</option>)}</select></label>
+            <label>Transaction Type<select value={edit.transactionType} onChange={e => setEdit({ ...edit, transactionType: e.target.value as TransactionType })}><option value="DEPOSIT">Deposit</option><option value="WITHDRAW">Withdraw</option><option value="FLOAT_TOP_UP">Float Top-up</option><option value="FLOAT_WITHDRAWAL">Float Withdrawal</option></select></label>
             <label>Amount (UGX)<input type="number" value={edit.amount} onChange={e => setEdit({ ...edit, amount: Number(e.target.value) })} min={0} /></label>
-            <label>Client Name<input value={edit.clientName} onChange={e => setEdit({ ...edit, clientName: e.target.value })} placeholder="Client name" /></label>
+            <label>Client ID<input value={edit.clientName} onChange={e => setEdit({ ...edit, clientName: e.target.value })} placeholder="Client ID" /></label>
           </div>
-          <div className="balancePreview"><div><span>Previous Balance</span><strong>{formatCurrency(previousBalance)}</strong></div><div><span>New Balance</span><strong>{formatCurrency(nextBalance)}</strong></div></div>
+          <div className="balancePreview">
+            <div><span>Previous E-cash</span><strong>{formatCurrency(previousEmoney)}</strong></div>
+            <div><span>New E-cash</span><strong>{formatCurrency(nextEmoney)}</strong></div>
+            <div><span>Previous Cash at Hand</span><strong>{formatCurrency(previousCash)}</strong></div>
+            <div><span>New Cash at Hand</span><strong>{formatCurrency(nextCash)}</strong></div>
+          </div>
         </Modal>
       )}
 
@@ -130,15 +136,17 @@ export function MNOWalletTransactionsPage() {
         <Modal title="Transaction Details" onClose={() => setSelected(null)} onSubmit={e => { e.preventDefault(); setSelected(null); }} submitLabel="Close" size="lg">
           <div className="detailGrid">
             <div className="detailCard"><span>Date</span><strong>{formatDateTime(selected.date)}</strong></div>
-            <div className="detailCard"><span>Wallet</span><strong>{selected.mnoWalletName}</strong></div>
+            <div className="detailCard"><span>Account</span><strong>{selected.accountName || selected.mnoWalletName || '--'}</strong></div>
             <div className="detailCard"><span>Agent ID</span><strong>{selected.agentNumber || '--'}</strong></div>
             <div className="detailCard"><span>Client Phone</span><strong>{selected.clientPhone || '--'}</strong></div>
-            <div className="detailCard"><span>Client Name</span><strong>{selected.clientName || '--'}</strong></div>
+            <div className="detailCard"><span>Client ID</span><strong>{selected.clientName || '--'}</strong></div>
             <div className="detailCard"><span>Status</span><strong>{selected.status}</strong></div>
             <div className="detailCard"><span>Transaction Type</span><strong>{transactionLabel(selected.transactionType)}</strong></div>
-            <div className="detailCard"><span>Amount</span><strong className={selected.transactionType === 'FLOAT_TOP_UP' || selected.transactionType === 'FLOAT_WITHDRAWAL' ? 'tablePositive' : 'tableNegative'}>{formatCurrency(selected.amount)}</strong></div>
-            <div className="detailCard"><span>Previous Balance</span><strong>{formatCurrency(selected.previousBalance)}</strong></div>
-            <div className="detailCard"><span>New Balance</span><strong>{formatCurrency(selected.balance)}</strong></div>
+            <div className="detailCard"><span>Amount</span><strong className={selected.transactionType === 'WITHDRAW' ? 'tablePositive' : 'tableNegative'}>{formatCurrency(selected.amount)}</strong></div>
+            <div className="detailCard"><span>Previous E-cash</span><strong>{formatCurrency(selected.previousEmoney ?? selected.previousBalance)}</strong></div>
+            <div className="detailCard"><span>New E-cash</span><strong>{formatCurrency(selected.newEmoney ?? selected.balance)}</strong></div>
+            <div className="detailCard"><span>Previous Cash at Hand</span><strong>{formatCurrency(selected.previousCashAtHand)}</strong></div>
+            <div className="detailCard"><span>New Cash at Hand</span><strong>{formatCurrency(selected.newCashAtHand)}</strong></div>
           </div>
         </Modal>
       )}

@@ -1,12 +1,12 @@
 export type Role = 'ADMIN' | 'MOBI_AGENT';
 export type ThemePreference = 'DARK' | 'LIGHT';
-export type TransactionType = 'FLOAT_TOP_UP' | 'FLOAT_WITHDRAWAL' | 'DEPOSIT' | 'FLOAT_TRANSFER';
+export type TransactionType = 'FLOAT_TOP_UP' | 'FLOAT_WITHDRAWAL' | 'DEPOSIT' | 'WITHDRAW' | 'FLOAT_TRANSFER';
 export type TransactionStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
 export type User = { id: number; name: string; email: string; role: Role };
 export type Session = User & { token: string; userId: number };
 export type MnoAccount = { id?: number; userId?: number; name: string; country: string; mobileNumber: string; agentId?: string; emoneyAmount: number; network: string; cashAtHand: number; accountType: string; currency?: string; openingBalance?: number; remarks?: string };
 export type MnoWallet = { id?: number; userId?: number; agentId: number; name: string; network: string; balance: number };
-export type MnoTransaction = { id: number; walletId: number; mnoWalletName: string; agentNumber: string; transactionType: TransactionType; amount: number; previousBalance: number; balance: number; date: string; clientPhone: string; clientName: string; status: TransactionStatus };
+export type MnoTransaction = { id: number; accountId?: number; accountName?: string; walletId?: number; mnoWalletName?: string; agentNumber: string; transactionType: TransactionType; amount: number; previousBalance: number; balance: number; previousEmoney?: number; newEmoney?: number; previousCashAtHand?: number; newCashAtHand?: number; date: string; clientPhone: string; clientName: string; status: TransactionStatus };
 export type ExchangeRate = { id?: number; fromCurrency: string; toCurrency: string; rate: number; updatedAt?: string };
 export type RoundingRule = { considerFigures: number; roundTo: number };
 export type CurrencyDenomination = { value: number; label: string; type: 'Note' | 'Coin'; status: 'Active' | 'Inactive' };

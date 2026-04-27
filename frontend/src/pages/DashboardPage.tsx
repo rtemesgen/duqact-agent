@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowUp, Banknote, BriefcaseBusiness, Wallet } from 'lucide-react';
 import { api } from '../api/client';
 import type { DashboardStats } from '../api/types';
@@ -19,7 +19,7 @@ export function DashboardPage() {
           <div>
             <p className="eyebrow">Workshop Overview</p>
             <h1>Mobi Dashboard</h1>
-            <p className="pageLead">Monitor float movement, active channels, wallet capacity, and account coverage from one control surface.</p>
+            <p className="pageLead">Monitor deposit and withdrawal movement, cash channels, and account coverage from one control surface.</p>
           </div>
         </div>
         <aside className="summaryPanel">
@@ -33,10 +33,10 @@ export function DashboardPage() {
           <div className="summaryPanelList">
             <div className="summaryPanelItem">
               <div>
-                <strong>Accounts and wallets</strong>
-                <span>Current operational footprint</span>
+                <strong>Accounts in operation</strong>
+                <span>Current ledger footprint</span>
               </div>
-              <div className="summaryPanelValue">{(stats?.accountCount ?? 0) + (stats?.walletCount ?? 0)}</div>
+              <div className="summaryPanelValue">{stats?.accountCount ?? 0}</div>
             </div>
             <div className="summaryPanelItem">
               <div>
@@ -57,9 +57,9 @@ export function DashboardPage() {
       </div>
 
       <div className="metricsGrid metricsGrid-four">
-        <DashboardKPICard label="Total Top-ups" value={formatCurrency(stats?.totalDeposits)} icon={<ArrowUp size={18} />} accent="green" />
-        <DashboardKPICard label="Total Withdrawals" value={formatCurrency(stats?.totalWithdrawals)} icon={<ArrowDown size={18} />} />
-        <DashboardKPICard label="Net Float Change" value={formatCurrency(stats?.netFloatChange)} icon={<Banknote size={18} />} accent="gold" />
+        <DashboardKPICard label="Total Deposits" value={formatCurrency(stats?.totalDeposits)} icon={<ArrowDown size={18} />} accent="green" />
+        <DashboardKPICard label="Total Withdrawals" value={formatCurrency(stats?.totalWithdrawals)} icon={<ArrowUp size={18} />} />
+        <DashboardKPICard label="Net E-cash Change" value={formatCurrency(stats?.netFloatChange)} icon={<Banknote size={18} />} accent="gold" />
         <DashboardKPICard label="Transaction Count" value={stats?.transactionCount ?? 0} icon={<Wallet size={18} />} />
       </div>
 
@@ -68,7 +68,7 @@ export function DashboardPage() {
           <div className="surfaceHead"><h2>Operations Footprint</h2></div>
           <div className="miniStats">
             <div><span>Accounts</span><strong>{stats?.accountCount ?? 0}</strong></div>
-            <div><span>Wallets</span><strong>{stats?.walletCount ?? 0}</strong></div>
+            <div><span>Linked Wallet Records</span><strong>{stats?.walletCount ?? 0}</strong></div>
             <div><span>Channel Types</span><strong>{stats?.channelTypeCount ?? 0}</strong></div>
             <div><span>Service Channels</span><strong>{stats?.serviceChannelCount ?? 0}</strong></div>
           </div>
@@ -78,8 +78,8 @@ export function DashboardPage() {
           <div className="miniStats">
             <div><span>Total E-money</span><strong>{formatCurrency(stats?.totalEmoney)}</strong></div>
             <div><span>Cash At Hand</span><strong>{formatCurrency(stats?.totalCashAtHand)}</strong></div>
-            <div><span>Total Wallet Balance</span><strong>{formatCurrency(stats?.totalWalletBalance)}</strong></div>
-            <div><span>Net Float</span><strong>{formatCurrency(stats?.netFloatChange)}</strong></div>
+            <div><span>Ledger Mirror</span><strong>{formatCurrency(stats?.totalWalletBalance)}</strong></div>
+            <div><span>Net E-cash Change</span><strong>{formatCurrency(stats?.netFloatChange)}</strong></div>
           </div>
         </section>
       </div>
@@ -87,12 +87,11 @@ export function DashboardPage() {
       <section className="surfaceCard">
         <div className="surfaceHead"><h2>Operational Summary</h2></div>
         <div className="summaryStrip">
-          <div><BriefcaseBusiness size={18} /><span>Wallets remain separate from Channel Management so transaction operations stay direct.</span></div>
-          <div><Wallet size={18} /><span>Dashboard totals are backed by the same API used by the pages below.</span></div>
-          <div><Banknote size={18} /><span>Channel Management is now a real feature with persisted channel types and service channels.</span></div>
+          <div><BriefcaseBusiness size={18} /><span>Transaction totals now follow account-ledger balances for e-cash and cash at hand.</span></div>
+          <div><Wallet size={18} /><span>Deposit reduces e-cash and increases cash at hand, while withdraw does the reverse.</span></div>
+          <div><Banknote size={18} /><span>Channel Management includes Cash as a channel type with Cash at Hand as a service channel.</span></div>
         </div>
       </section>
     </section>
   );
 }
-

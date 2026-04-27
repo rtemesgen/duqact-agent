@@ -53,16 +53,17 @@ public class MobiAgentApplication {
                 agent = users.findByEmail("agent@mobi.local").orElse(null);
             }
 
-            if (agent != null && channelTypes.findByUserIdOrderByCreatedAtAsc(agent.getId()).isEmpty()) {
-                ChannelType mno = createType(agent.getId(), "MNO", "Mobile Network Operator", true);
-                ChannelType bank = createType(agent.getId(), "Bank", "Banking Institution", true);
-                ChannelType wallet = createType(agent.getId(), "Wallet", "Digital Wallet Service", true);
-                mno = channelTypes.save(mno);
-                bank = channelTypes.save(bank);
-                wallet = channelTypes.save(wallet);
+            if (agent != null) {
+                var existingTypes = channelTypes.findByUserIdOrderByCreatedAtAsc(agent.getId());
+                ChannelType mno = findOrCreateType(existingTypes, channelTypes, agent.getId(), "MNO", "Mobile Network Operator");
+                findOrCreateType(existingTypes, channelTypes, agent.getId(), "Bank", "Banking Institution");
+                findOrCreateType(existingTypes, channelTypes, agent.getId(), "Wallet", "Digital Wallet Service");
+                ChannelType cash = findOrCreateType(existingTypes, channelTypes, agent.getId(), "Cash", "Cash handling channels");
 
-                serviceChannels.save(createService(agent.getId(), mno.getId(), "MTN Mobile Money", "Uganda", true, "Admin"));
-                serviceChannels.save(createService(agent.getId(), mno.getId(), "Airtel Money", "Uganda", true, "Admin"));
+                var existingServices = serviceChannels.findByUserIdOrderByCreatedAtAsc(agent.getId());
+                saveServiceIfMissing(existingServices, serviceChannels, createService(agent.getId(), mno.getId(), "MTN Mobile Money", "Uganda", true, "Admin"));
+                saveServiceIfMissing(existingServices, serviceChannels, createService(agent.getId(), mno.getId(), "Airtel Money", "Uganda", true, "Admin"));
+                saveServiceIfMissing(existingServices, serviceChannels, createService(agent.getId(), cash.getId(), "Cash at Hand", "Uganda", true, "Admin"));
             }
 
             if (agent != null && currencyProfiles.findByUserIdOrderByCountryNameAsc(agent.getId()).isEmpty()) {
@@ -147,6 +148,13 @@ public class MobiAgentApplication {
         return item;
     }
 
+    private static ChannelType findOrCreateType(List<ChannelType> existingTypes, ChannelTypeRepository repository, Long userId, String name, String description) {
+        return existingTypes.stream()
+                .filter(item -> item.getName() != null && item.getName().equalsIgnoreCase(name))
+                .findFirst()
+                .orElseGet(() -> repository.save(createType(userId, name, description, true)));
+    }
+
     private static ServiceChannel createService(Long userId, Long channelTypeId, String channelName, String country, boolean active, String createdBy) {
         ServiceChannel item = new ServiceChannel();
         item.setUserId(userId);
@@ -157,6 +165,15 @@ public class MobiAgentApplication {
         item.setCreatedByName(createdBy);
         item.setCreatedAt(Instant.now());
         return item;
+    }
+
+    private static void saveServiceIfMissing(List<ServiceChannel> existingServices, ServiceChannelRepository repository, ServiceChannel candidate) {
+        boolean exists = existingServices.stream().anyMatch(item ->
+                item.getChannelTypeId() != null
+                        && item.getChannelTypeId().equals(candidate.getChannelTypeId())
+                        && item.getChannelName() != null
+                        && item.getChannelName().equalsIgnoreCase(candidate.getChannelName()));
+        if (!exists) repository.save(candidate);
     }
 
     private static CurrencyProfile createProfile(Long userId, String countryName, String countryCode, String currency, String currencyCode, String symbol, int decimalPlaces,
