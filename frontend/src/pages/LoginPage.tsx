@@ -38,7 +38,7 @@ export function LoginPage() {
     <main className="authShell">
       <section className="authShowcase">
         <div className="brandPill">mobi Agent</div>
-        <div>
+       {/* <div>
           <p className="eyebrow">Reference Adoption</p>
           <h1>Use the reference Mobi shell and workflows on top of the stronger backend.</h1>
           <p className="pageLead">Users sign in directly with email and password, while registration keeps the standard Mobi Agent onboarding flow.</p>
@@ -56,7 +56,7 @@ export function LoginPage() {
             <strong>Production-ready</strong>
             <span>Demo one-click login is hidden from the live sign-in experience</span>
           </div>
-        </div>
+        </div>*/}
       </section>
 
       <section className="authCard">
