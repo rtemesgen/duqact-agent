@@ -130,56 +130,95 @@ export function MNOWalletSettingsPage() {
         {loading ? (
           <div className="surfaceCard surfaceCard-muted"><p className="pageLead">Loading wallets...</p></div>
         ) : (
-        <div className="tableWrap">
-          <table className="workshopTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Wallet</th>
-                <th>Linked Account</th>
-                <th>Network</th>
-                <th>Balance</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paged.map((wallet, index) => (
-                <tr key={wallet.id}>
-                  <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
-                  <td>
-                    <div className="tablePrimaryBlock">
-                      <strong>{wallet.name}</strong>
-                      <span>{wallet.network || 'No network set'}</span>
-                    </div>
-                  </td>
-                  <td>{accountName.get(wallet.agentId) ?? '--'}</td>
-                  <td>{wallet.network || '--'}</td>
-                  <td className="tableStrong">{formatCurrency(wallet.balance)}</td>
-                  <td>
-                    <div className="actionRow">
-                      <button type="button" className="iconButton" aria-label="View wallet" onClick={() => setSelected(wallet)}>
-                        <Eye size={16} />
-                      </button>
-                      <button type="button" className="iconButton" aria-label="Edit wallet" onClick={() => setEdit(wallet)}>
-                        <Pencil size={16} />
-                      </button>
-                      <button type="button" className="iconButton dangerIcon" aria-label="Delete wallet" onClick={() => setDeleteTarget(wallet)}>
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="emptyCell">
-                    No wallets found.
-                  </td>
-                </tr>
+          <>
+            <div className="tableWrap desktopOnly">
+              <table className="workshopTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Wallet</th>
+                    <th>Linked Account</th>
+                    <th>Network</th>
+                    <th>Balance</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paged.map((wallet, index) => (
+                    <tr key={wallet.id}>
+                      <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
+                      <td>
+                        <div className="tablePrimaryBlock">
+                          <strong>{wallet.name}</strong>
+                          <span>{wallet.network || 'No network set'}</span>
+                        </div>
+                      </td>
+                      <td>{accountName.get(wallet.agentId) ?? '--'}</td>
+                      <td>{wallet.network || '--'}</td>
+                      <td className="tableStrong">{formatCurrency(wallet.balance)}</td>
+                      <td>
+                        <div className="actionRow">
+                          <button type="button" className="iconButton" aria-label="View wallet" onClick={() => setSelected(wallet)}>
+                            <Eye size={16} />
+                          </button>
+                          <button type="button" className="iconButton" aria-label="Edit wallet" onClick={() => setEdit(wallet)}>
+                            <Pencil size={16} />
+                          </button>
+                          <button type="button" className="iconButton dangerIcon" aria-label="Delete wallet" onClick={() => setDeleteTarget(wallet)}>
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="emptyCell">
+                        No wallets found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mobileOnly">
+              {paged.length === 0 ? (
+                <div className="surfaceCard surfaceCard-muted"><p className="pageLead">No wallets found.</p></div>
+              ) : (
+                <div className="mobileDataList">
+                  {paged.map((wallet, index) => (
+                    <article key={wallet.id} className="mobileDataCard">
+                      <div className="mobileDataCardHeader">
+                        <div>
+                          <strong>{wallet.name}</strong>
+                          <span>#{(page - 1) * PAGE_SIZE + index + 1} • {wallet.network || 'No network set'}</span>
+                        </div>
+                        <div className="mobileDataBadgeColumn">
+                          <span className="statusPill statusNeutral">{formatCurrency(wallet.balance)}</span>
+                        </div>
+                      </div>
+                      <div className="mobileDataRows">
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Linked Account</span><span className="mobileDataRowValue">{accountName.get(wallet.agentId) ?? '--'}</span></div>
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Network</span><span className="mobileDataRowValue">{wallet.network || '--'}</span></div>
+                      </div>
+                      <div className="mobileDataActions">
+                        <button type="button" className="iconButton" aria-label="View wallet" onClick={() => setSelected(wallet)}>
+                          <Eye size={16} />
+                        </button>
+                        <button type="button" className="iconButton" aria-label="Edit wallet" onClick={() => setEdit(wallet)}>
+                          <Pencil size={16} />
+                        </button>
+                        <button type="button" className="iconButton dangerIcon" aria-label="Delete wallet" onClick={() => setDeleteTarget(wallet)}>
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </>
         )}
 
         <div className="tableFooter">

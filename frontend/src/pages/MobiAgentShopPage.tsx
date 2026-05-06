@@ -45,7 +45,38 @@ export function MobiAgentShopPage() {
     <section className="pageSection">
       <div className="pageHero pageHero-row"><div><p className="eyebrow">Account</p><h1>Mobi Agent Shop</h1><p className="pageLead">Business details, locations, and worker management.</p></div>{session?.role === 'ADMIN' && <button className="primaryButton" onClick={() => setEdit({ businessName: '', location: '', country: 'Uganda', ownerUserId: users[0]?.id ?? 0, agentId: '', remarks: '' })}><Plus size={18} />Add Agent Shop</button>}</div>
       <section className="surfaceCard">
-        <div className="tableWrap"><table className="workshopTable"><thead><tr><th>Agent Name</th><th>Agent ID</th><th>Location</th><th>Owner</th><th>Workers</th><th>Actions</th></tr></thead><tbody>{shops.map((shop) => <tr key={shop.id}><td className="tableStrong">{shop.businessName}</td><td className="accentText tableStrong">{shop.agentId}</td><td>{shop.location}, {shop.country}</td><td>{shop.ownerName}</td><td><span className="statusPill statusNeutral">{workers[shop.id!]?.length ?? shop.workerCount ?? 0} Workers</span></td><td><div className="actionRow"><button className="iconButton" onClick={() => setView(shop)}><Eye size={16} /></button>{session?.role === 'ADMIN' && <button className="iconButton" onClick={() => setEdit(shop)}><Pencil size={16} /></button>}{session?.role === 'ADMIN' && <button className="iconButton" onClick={() => setAssignTarget(shop)}><UserPlus size={16} /></button>}{session?.role === 'ADMIN' && shop.id && <button className="iconButton dangerIcon" onClick={() => destroy(shop.id!)}><Trash2 size={16} /></button>}</div></td></tr>)}{shops.length === 0 && <tr><td colSpan={6} className="emptyCell">No assigned shops found.</td></tr>}</tbody></table></div>
+        <div className="tableWrap desktopOnly"><table className="workshopTable"><thead><tr><th>Agent Name</th><th>Agent ID</th><th>Location</th><th>Owner</th><th>Workers</th><th>Actions</th></tr></thead><tbody>{shops.map((shop) => <tr key={shop.id}><td className="tableStrong">{shop.businessName}</td><td className="accentText tableStrong">{shop.agentId}</td><td>{shop.location}, {shop.country}</td><td>{shop.ownerName}</td><td><span className="statusPill statusNeutral">{workers[shop.id!]?.length ?? shop.workerCount ?? 0} Workers</span></td><td><div className="actionRow"><button className="iconButton" onClick={() => setView(shop)}><Eye size={16} /></button>{session?.role === 'ADMIN' && <button className="iconButton" onClick={() => setEdit(shop)}><Pencil size={16} /></button>}{session?.role === 'ADMIN' && <button className="iconButton" onClick={() => setAssignTarget(shop)}><UserPlus size={16} /></button>}{session?.role === 'ADMIN' && shop.id && <button className="iconButton dangerIcon" onClick={() => destroy(shop.id!)}><Trash2 size={16} /></button>}</div></td></tr>)}{shops.length === 0 && <tr><td colSpan={6} className="emptyCell">No assigned shops found.</td></tr>}</tbody></table></div>
+        <div className="mobileOnly">
+          {shops.length === 0 ? (
+            <div className="surfaceCard surfaceCard-muted"><p className="pageLead">No assigned shops found.</p></div>
+          ) : (
+            <div className="mobileDataList">
+              {shops.map((shop) => (
+                <article key={shop.id} className="mobileDataCard">
+                  <div className="mobileDataCardHeader">
+                    <div>
+                      <strong>{shop.businessName}</strong>
+                      <span>{shop.agentId}</span>
+                    </div>
+                    <div className="mobileDataBadgeColumn">
+                      <span className="statusPill statusNeutral">{workers[shop.id!]?.length ?? shop.workerCount ?? 0} Workers</span>
+                    </div>
+                  </div>
+                  <div className="mobileDataRows">
+                    <div className="mobileDataRow"><span className="mobileDataRowLabel">Location</span><span className="mobileDataRowValue">{shop.location}, {shop.country}</span></div>
+                    <div className="mobileDataRow"><span className="mobileDataRowLabel">Owner</span><span className="mobileDataRowValue">{shop.ownerName}</span></div>
+                  </div>
+                  <div className="mobileDataActions">
+                    <button className="iconButton" onClick={() => setView(shop)}><Eye size={16} /></button>
+                    {session?.role === 'ADMIN' && <button className="iconButton" onClick={() => setEdit(shop)}><Pencil size={16} /></button>}
+                    {session?.role === 'ADMIN' && <button className="iconButton" onClick={() => setAssignTarget(shop)}><UserPlus size={16} /></button>}
+                    {session?.role === 'ADMIN' && shop.id && <button className="iconButton dangerIcon" onClick={() => destroy(shop.id!)}><Trash2 size={16} /></button>}
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </div>
       </section>
       {edit && <Modal title={edit.id ? 'Edit Agent Shop' : 'Add New Agent Shop'} onClose={() => setEdit(null)} onSubmit={(e) => { e.preventDefault(); save(); }} submitLabel={edit.id ? 'Save Changes' : 'Create Shop'} headerTone="accent"><div className="formGrid"><label>Business Name<input value={edit.businessName} onChange={(e) => setEdit({ ...edit, businessName: e.target.value })} /></label><div className="formGrid formGrid-two"><label>Country<select value={edit.country} onChange={(e) => setEdit({ ...edit, country: e.target.value })}><option>Uganda</option><option>Kenya</option><option>Tanzania</option></select></label><label>Location<input value={edit.location} onChange={(e) => setEdit({ ...edit, location: e.target.value })} /></label></div><label>Assign Owner<select value={edit.ownerUserId} onChange={(e) => setEdit({ ...edit, ownerUserId: Number(e.target.value) })}>{users.map((user) => <option key={user.id} value={user.id}>{user.name}</option>)}</select></label><label>Agent ID<input value={edit.agentId} onChange={(e) => setEdit({ ...edit, agentId: e.target.value })} placeholder="AGT-001" /></label><label>Remarks<textarea value={edit.remarks} onChange={(e) => setEdit({ ...edit, remarks: e.target.value })} rows={3} /></label></div></Modal>}
       {assignTarget && <Modal title="Assign Worker" onClose={() => setAssignTarget(null)} onSubmit={(e) => { e.preventDefault(); assignWorker(); }} submitLabel="Assign Worker" headerTone="accent"><div className="formGrid"><label>User<select value={assignForm.userId} onChange={(e) => setAssignForm({ ...assignForm, userId: Number(e.target.value) })}>{users.map((user) => <option key={user.id} value={user.id}>{user.name}</option>)}</select></label><label>Job Title<input value={assignForm.jobTitle} onChange={(e) => setAssignForm({ ...assignForm, jobTitle: e.target.value })} /></label><label>Phone<input value={assignForm.phone} onChange={(e) => setAssignForm({ ...assignForm, phone: e.target.value })} /></label></div></Modal>}
