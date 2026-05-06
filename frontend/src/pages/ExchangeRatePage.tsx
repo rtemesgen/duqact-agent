@@ -239,7 +239,7 @@ export function ExchangeRatePage() {
               <label className="searchField"><Search size={16} /><input value={profileSearch} onChange={(e) => setProfileSearch(e.target.value)} placeholder="Search country..." /></label>
               <button className="primaryButton" onClick={() => setEditProfile({ ...blankProfile })}><Plus size={18} />Add Profile</button>
             </div>
-            <div className="tableWrap">
+            <div className="tableWrap desktopOnly">
               <table className="workshopTable">
                 <thead><tr><th>Country</th><th>Currency</th><th>Symbol</th><th>Decimals</th><th>Rounding</th><th>Actions</th></tr></thead>
                 <tbody>
@@ -257,6 +257,36 @@ export function ExchangeRatePage() {
                 </tbody>
               </table>
             </div>
+            <div className="mobileOnly">
+              {filteredProfiles.length === 0 ? (
+                <div className="surfaceCard surfaceCard-muted"><p className="pageLead">No currency profiles found.</p></div>
+              ) : (
+                <div className="mobileDataList">
+                  {filteredProfiles.map((item) => (
+                    <article key={item.id} className="mobileDataCard">
+                      <div className="mobileDataCardHeader">
+                        <div>
+                          <strong>{item.countryName}</strong>
+                          <span>{item.countryCode}</span>
+                        </div>
+                        <div className="mobileDataBadgeColumn">
+                          <span className="statusPill statusNeutral">{item.roundingCondition}</span>
+                        </div>
+                      </div>
+                      <div className="mobileDataRows">
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Currency</span><span className="mobileDataRowValue">{item.currencyCode} - {item.currency}</span></div>
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Symbol</span><span className="mobileDataRowValue">{item.currencySymbol}</span></div>
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Decimals</span><span className="mobileDataRowValue">{item.decimalPlaces}</span></div>
+                      </div>
+                      <div className="mobileDataActions">
+                        <button className="iconButton" onClick={() => setViewProfile(item)}><Eye size={16} /></button>
+                        <button className="iconButton" onClick={() => setEditProfile(item)}><Pencil size={16} /></button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
           </>
         )}
 
@@ -265,7 +295,7 @@ export function ExchangeRatePage() {
             <div className="toolbarRow">
               <label className="searchField"><Search size={16} /><input value={profileSearch} onChange={(e) => setProfileSearch(e.target.value)} placeholder="Search country..." /></label>
             </div>
-            <div className="tableWrap">
+            <div className="tableWrap desktopOnly">
               <table className="workshopTable">
                 <thead><tr><th>Country</th><th>Currency</th><th>Denominations</th><th>Actions</th></tr></thead>
                 <tbody>
@@ -281,6 +311,34 @@ export function ExchangeRatePage() {
                 </tbody>
               </table>
             </div>
+            <div className="mobileOnly">
+              {filteredProfiles.length === 0 ? (
+                <div className="surfaceCard surfaceCard-muted"><p className="pageLead">No currency profiles found.</p></div>
+              ) : (
+                <div className="mobileDataList">
+                  {filteredProfiles.map((item) => (
+                    <article key={item.id} className="mobileDataCard">
+                      <div className="mobileDataCardHeader">
+                        <div>
+                          <strong>{item.countryName}</strong>
+                          <span>{item.countryCode}</span>
+                        </div>
+                        <div className="mobileDataBadgeColumn">
+                          <span className="typeBadge">{item.currencyCode}</span>
+                        </div>
+                      </div>
+                      <div className="mobileDataRows">
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Denominations</span><span className="mobileDataRowValue">{item.denominations.length}</span></div>
+                      </div>
+                      <div className="mobileDataActions">
+                        <button className="iconButton" onClick={() => setDenomProfile(item)}><Eye size={16} /></button>
+                        <button className="iconButton dangerIcon" onClick={() => setDeleteDenomsTarget(item)}><Trash2 size={16} /></button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
           </>
         )}
 
@@ -290,7 +348,7 @@ export function ExchangeRatePage() {
               <label className="searchField"><Search size={16} /><input value={rateSearch} onChange={(e) => setRateSearch(e.target.value)} placeholder="Search currency pairs..." /></label>
               <button className="primaryButton" onClick={() => setEditRate(blankRate)}><Plus size={18} />New Rate</button>
             </div>
-            <div className="tableWrap">
+            <div className="tableWrap desktopOnly">
               <table className="workshopTable">
                 <thead><tr><th>Pair</th><th>Rate</th><th>Updated At</th><th>Actions</th></tr></thead>
                 <tbody>
@@ -305,6 +363,32 @@ export function ExchangeRatePage() {
                   {filteredRates.length === 0 && <tr><td colSpan={4} className="emptyCell">No exchange rates found.</td></tr>}
                 </tbody>
               </table>
+            </div>
+            <div className="mobileOnly">
+              {filteredRates.length === 0 ? (
+                <div className="surfaceCard surfaceCard-muted"><p className="pageLead">No exchange rates found.</p></div>
+              ) : (
+                <div className="mobileDataList">
+                  {filteredRates.map((item) => (
+                    <article key={item.id} className="mobileDataCard">
+                      <div className="mobileDataCardHeader">
+                        <div>
+                          <strong>{item.fromCurrency} / {item.toCurrency}</strong>
+                          <span>{formatDateTime(item.updatedAt ?? null)}</span>
+                        </div>
+                        <div className="mobileDataBadgeColumn">
+                          <span className="statusPill statusNeutral">{item.rate}</span>
+                        </div>
+                      </div>
+                      <div className="mobileDataActions">
+                        <button className="iconButton" onClick={() => setViewRate(item)}><Eye size={16} /></button>
+                        <button className="iconButton" onClick={() => setEditRate(item)}><Pencil size={16} /></button>
+                        <button className="iconButton dangerIcon" onClick={() => setDeleteRate(item)}><Trash2 size={16} /></button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}
@@ -393,7 +477,7 @@ export function ExchangeRatePage() {
             <label>Status<select value={newStatus} onChange={(e) => setNewStatus(e.target.value as 'Active' | 'Inactive')}><option value="Active">Active</option><option value="Inactive">Inactive</option></select></label>
           </div>
           <button type="button" className="primaryButton" onClick={addOrUpdateDenomination}>{editingDenomIndex === null ? 'Add Denomination' : 'Update Denomination'}</button>
-          <div className="tableWrap">
+          <div className="tableWrap desktopOnly">
             <table className="workshopTable">
               <thead><tr><th>Value</th><th>Label</th><th>Type</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
@@ -409,6 +493,32 @@ export function ExchangeRatePage() {
                 {denomProfile.denominations.length === 0 && <tr><td colSpan={5} className="emptyCell">No denominations recorded yet.</td></tr>}
               </tbody>
             </table>
+          </div>
+          <div className="mobileOnly">
+            {denomProfile.denominations.length === 0 ? (
+              <div className="surfaceCard surfaceCard-muted"><p className="pageLead">No denominations recorded yet.</p></div>
+            ) : (
+              <div className="mobileDataList">
+                {denomProfile.denominations.map((item, index) => (
+                  <article key={`${item.value}-${index}`} className="mobileDataCard">
+                    <div className="mobileDataCardHeader">
+                      <div>
+                        <strong>{item.label}</strong>
+                        <span>{item.value}</span>
+                      </div>
+                      <div className="mobileDataBadgeColumn">
+                        <span className="typeBadge">{item.type}</span>
+                        <span className={item.status === 'Active' ? 'statusPill statusPositive' : 'statusPill statusNeutral'}>{item.status}</span>
+                      </div>
+                    </div>
+                    <div className="mobileDataActions">
+                      <button type="button" className="iconButton" onClick={() => editDenomination(index)}><Pencil size={16} /></button>
+                      <button type="button" className="iconButton dangerIcon" onClick={() => removeDenomination(index)}><Trash2 size={16} /></button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
           </div>
         </Modal>
       )}

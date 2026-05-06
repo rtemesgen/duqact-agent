@@ -108,27 +108,64 @@ export function MNOWalletTransactionsPage() {
         {loading ? (
           <div className="surfaceCard surfaceCard-muted"><p className="pageLead">Loading transactions...</p></div>
         ) : (
-        <div className="tableWrap">
-          <table className="workshopTable">
-            <thead><tr><th>Date</th><th>Account</th><th>Agent ID</th><th>Client Phone</th><th>Type</th><th>Amount</th><th>Prev. E-cash</th><th>New E-cash</th><th>Actions</th></tr></thead>
-            <tbody>
-              {paged.map(item => (
-                <tr key={item.id}>
-                  <td>{formatDateTime(item.date)}</td>
-                  <td>{item.accountName || item.mnoWalletName || '--'}</td>
-                  <td>{item.agentNumber || '--'}</td>
-                  <td>{item.clientPhone || '--'}</td>
-                  <td><span className={`statusPill ${item.transactionType === 'WITHDRAW' || item.transactionType === 'FLOAT_WITHDRAWAL' ? 'statusPositive' : 'statusNeutral'}`}>{transactionLabel(item.transactionType)}</span></td>
-                  <td className={item.transactionType === 'WITHDRAW' || item.transactionType === 'FLOAT_WITHDRAWAL' ? 'tablePositive' : 'tableNegative'}>{item.transactionType === 'WITHDRAW' || item.transactionType === 'FLOAT_WITHDRAWAL' ? '+' : '-'}{formatCurrency(item.amount)}</td>
-                  <td>{formatCurrency(item.previousEmoney ?? item.previousBalance)}</td>
-                  <td className="tableStrong">{formatCurrency(item.newEmoney ?? item.balance)}</td>
-                  <td><button type="button" className="iconButton" aria-label="View transaction" onClick={() => setSelected(item)}><Eye size={16} /></button></td>
-                </tr>
-              ))}
-              {filtered.length === 0 && <tr><td colSpan={9} className="emptyCell">No transactions found.</td></tr>}
-            </tbody>
-          </table>
-        </div>
+          <>
+            <div className="tableWrap desktopOnly">
+              <table className="workshopTable">
+                <thead><tr><th>Date</th><th>Account</th><th>Agent ID</th><th>Client Phone</th><th>Type</th><th>Amount</th><th>Prev. E-cash</th><th>New E-cash</th><th>Actions</th></tr></thead>
+                <tbody>
+                  {paged.map(item => (
+                    <tr key={item.id}>
+                      <td>{formatDateTime(item.date)}</td>
+                      <td>{item.accountName || item.mnoWalletName || '--'}</td>
+                      <td>{item.agentNumber || '--'}</td>
+                      <td>{item.clientPhone || '--'}</td>
+                      <td><span className={`statusPill ${item.transactionType === 'WITHDRAW' || item.transactionType === 'FLOAT_WITHDRAWAL' ? 'statusPositive' : 'statusNeutral'}`}>{transactionLabel(item.transactionType)}</span></td>
+                      <td className={item.transactionType === 'WITHDRAW' || item.transactionType === 'FLOAT_WITHDRAWAL' ? 'tablePositive' : 'tableNegative'}>{item.transactionType === 'WITHDRAW' || item.transactionType === 'FLOAT_WITHDRAWAL' ? '+' : '-'}{formatCurrency(item.amount)}</td>
+                      <td>{formatCurrency(item.previousEmoney ?? item.previousBalance)}</td>
+                      <td className="tableStrong">{formatCurrency(item.newEmoney ?? item.balance)}</td>
+                      <td><button type="button" className="iconButton" aria-label="View transaction" onClick={() => setSelected(item)}><Eye size={16} /></button></td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && <tr><td colSpan={9} className="emptyCell">No transactions found.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mobileOnly">
+              {paged.length === 0 ? (
+                <div className="surfaceCard surfaceCard-muted"><p className="pageLead">No transactions found.</p></div>
+              ) : (
+                <div className="mobileDataList">
+                  {paged.map((item) => {
+                    const positive = item.transactionType === 'WITHDRAW' || item.transactionType === 'FLOAT_WITHDRAWAL';
+                    return (
+                      <article key={item.id} className="mobileDataCard">
+                        <div className="mobileDataCardHeader">
+                          <div>
+                            <strong>{item.accountName || item.mnoWalletName || '--'}</strong>
+                            <span>{formatDateTime(item.date)}</span>
+                          </div>
+                          <div className="mobileDataBadgeColumn">
+                            <span className={`statusPill ${positive ? 'statusPositive' : 'statusNeutral'}`}>{transactionLabel(item.transactionType)}</span>
+                            <span className={positive ? 'tablePositive' : 'tableNegative'}>{positive ? '+' : '-'}{formatCurrency(item.amount)}</span>
+                          </div>
+                        </div>
+                        <div className="mobileDataRows">
+                          <div className="mobileDataRow"><span className="mobileDataRowLabel">Agent ID</span><span className="mobileDataRowValue">{item.agentNumber || '--'}</span></div>
+                          <div className="mobileDataRow"><span className="mobileDataRowLabel">Client Phone</span><span className="mobileDataRowValue">{item.clientPhone || '--'}</span></div>
+                          <div className="mobileDataRow"><span className="mobileDataRowLabel">Previous E-cash</span><span className="mobileDataRowValue">{formatCurrency(item.previousEmoney ?? item.previousBalance)}</span></div>
+                          <div className="mobileDataRow"><span className="mobileDataRowLabel">New E-cash</span><span className="mobileDataRowValue">{formatCurrency(item.newEmoney ?? item.balance)}</span></div>
+                        </div>
+                        <div className="mobileDataActions">
+                          <button type="button" className="iconButton" aria-label="View transaction" onClick={() => setSelected(item)}><Eye size={16} /></button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
         )}
 
         <div className="tableFooter">

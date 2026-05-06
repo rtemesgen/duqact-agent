@@ -98,57 +98,93 @@ export function AdminUsersPage() {
         {loading ? (
           <div className="surfaceCard surfaceCard-muted"><p className="pageLead">Loading users...</p></div>
         ) : (
-        <div className="tableWrap">
-          <table className="workshopTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>User</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paged.map((user, index) => (
-                <tr key={user.id}>
-                  <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
-                  <td>
-                    <div className="tablePrimaryBlock">
-                      <strong>{user.name}</strong>
-                      <span>User ID #{user.id}</span>
-                    </div>
-                  </td>
-                  <td>{user.email}</td>
-                  <td>
-                    <span className={`statusPill ${user.role === 'ADMIN' ? 'statusPositive' : 'statusNeutral'}`}>{user.role}</span>
-                  </td>
-                  <td>
-                    <span className="statusPill statusPositive">ACTIVE</span>
-                  </td>
-                  <td>
-                    <div className="actionRow">
-                      <button type="button" className="iconButton" aria-label="View user" onClick={() => setSelected(user)}>
-                        <Eye size={16} />
-                      </button>
-                      <button type="button" className="iconButton" aria-label="Edit user role" onClick={() => setEditing(user)}>
-                        <Pencil size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="emptyCell">
-                    No users found.
-                  </td>
-                </tr>
+          <>
+            <div className="tableWrap desktopOnly">
+              <table className="workshopTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paged.map((user, index) => (
+                    <tr key={user.id}>
+                      <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
+                      <td>
+                        <div className="tablePrimaryBlock">
+                          <strong>{user.name}</strong>
+                          <span>User ID #{user.id}</span>
+                        </div>
+                      </td>
+                      <td>{user.email}</td>
+                      <td>
+                        <span className={`statusPill ${user.role === 'ADMIN' ? 'statusPositive' : 'statusNeutral'}`}>{user.role}</span>
+                      </td>
+                      <td>
+                        <span className="statusPill statusPositive">ACTIVE</span>
+                      </td>
+                      <td>
+                        <div className="actionRow">
+                          <button type="button" className="iconButton" aria-label="View user" onClick={() => setSelected(user)}>
+                            <Eye size={16} />
+                          </button>
+                          <button type="button" className="iconButton" aria-label="Edit user role" onClick={() => setEditing(user)}>
+                            <Pencil size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="emptyCell">
+                        No users found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mobileOnly">
+              {paged.length === 0 ? (
+                <div className="surfaceCard surfaceCard-muted"><p className="pageLead">No users found.</p></div>
+              ) : (
+                <div className="mobileDataList">
+                  {paged.map((user, index) => (
+                    <article key={user.id} className="mobileDataCard">
+                      <div className="mobileDataCardHeader">
+                        <div>
+                          <strong>{user.name}</strong>
+                          <span>#{(page - 1) * PAGE_SIZE + index + 1} • User ID #{user.id}</span>
+                        </div>
+                        <div className="mobileDataBadgeColumn">
+                          <span className={`statusPill ${user.role === 'ADMIN' ? 'statusPositive' : 'statusNeutral'}`}>{user.role}</span>
+                          <span className="statusPill statusPositive">ACTIVE</span>
+                        </div>
+                      </div>
+                      <div className="mobileDataRows">
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Email</span><span className="mobileDataRowValue">{user.email}</span></div>
+                      </div>
+                      <div className="mobileDataActions">
+                        <button type="button" className="iconButton" aria-label="View user" onClick={() => setSelected(user)}>
+                          <Eye size={16} />
+                        </button>
+                        <button type="button" className="iconButton" aria-label="Edit user role" onClick={() => setEditing(user)}>
+                          <Pencil size={16} />
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </>
         )}
 
         <div className="tableFooter">

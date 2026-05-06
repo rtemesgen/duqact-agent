@@ -142,60 +142,103 @@ export function MobiAgentSettingsPage() {
         {loading ? (
           <div className="surfaceCard surfaceCard-muted"><p className="pageLead">Loading accounts...</p></div>
         ) : (
-        <div className="tableWrap">
-          <table className="workshopTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Account</th>
-                <th>Channel Type</th>
-                <th>Channel Name</th>
-                <th>Agent ID</th>
-                <th>Account No.</th>
-                <th>Balance (UGX)</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paged.map((item, index) => (
-                <tr key={item.id}>
-                  <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
-                  <td>
-                    <div className="tablePrimaryBlock">
-                      <strong>{item.name}</strong>
-                      <span>{item.country || 'No country set'}</span>
-                    </div>
-                  </td>
-                  <td>{item.accountType || 'MNO'}</td>
-                  <td>{item.network || '--'}</td>
-                  <td>{item.agentId || '--'}</td>
-                  <td>{item.mobileNumber || '--'}</td>
-                  <td className={(item.emoneyAmount ?? 0) < 100000 ? 'tableNegative' : 'tablePositive'}>{formatCurrency(item.emoneyAmount)}</td>
-                  <td>
-                    <div className="actionRow">
-                      <button type="button" className="iconButton" aria-label="View account" onClick={() => setSelected(item)}>
-                        <Eye size={16} />
-                      </button>
-                      <button type="button" className="iconButton" aria-label="Edit account" onClick={() => setEdit(item)}>
-                        <Pencil size={16} />
-                      </button>
-                      <button type="button" className="iconButton dangerIcon" aria-label="Delete account" onClick={() => setDeleteTarget(item)}>
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td colSpan={8} className="emptyCell">
-                    No MNO accounts found.
-                  </td>
-                </tr>
+          <>
+            <div className="tableWrap desktopOnly">
+              <table className="workshopTable">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Account</th>
+                    <th>Channel Type</th>
+                    <th>Channel Name</th>
+                    <th>Agent ID</th>
+                    <th>Account No.</th>
+                    <th>Balance (UGX)</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paged.map((item, index) => (
+                    <tr key={item.id}>
+                      <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
+                      <td>
+                        <div className="tablePrimaryBlock">
+                          <strong>{item.name}</strong>
+                          <span>{item.country || 'No country set'}</span>
+                        </div>
+                      </td>
+                      <td>{item.accountType || 'MNO'}</td>
+                      <td>{item.network || '--'}</td>
+                      <td>{item.agentId || '--'}</td>
+                      <td>{item.mobileNumber || '--'}</td>
+                      <td className={(item.emoneyAmount ?? 0) < 100000 ? 'tableNegative' : 'tablePositive'}>{formatCurrency(item.emoneyAmount)}</td>
+                      <td>
+                        <div className="actionRow">
+                          <button type="button" className="iconButton" aria-label="View account" onClick={() => setSelected(item)}>
+                            <Eye size={16} />
+                          </button>
+                          <button type="button" className="iconButton" aria-label="Edit account" onClick={() => setEdit(item)}>
+                            <Pencil size={16} />
+                          </button>
+                          <button type="button" className="iconButton dangerIcon" aria-label="Delete account" onClick={() => setDeleteTarget(item)}>
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="emptyCell">
+                        No MNO accounts found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mobileOnly">
+              {paged.length === 0 ? (
+                <div className="surfaceCard surfaceCard-muted"><p className="pageLead">No MNO accounts found.</p></div>
+              ) : (
+                <div className="mobileDataList">
+                  {paged.map((item, index) => (
+                    <article key={item.id} className="mobileDataCard">
+                      <div className="mobileDataCardHeader">
+                        <div>
+                          <strong>{item.name}</strong>
+                          <span>#{(page - 1) * PAGE_SIZE + index + 1} • {item.country || 'No country set'}</span>
+                        </div>
+                        <div className="mobileDataBadgeColumn">
+                          <span className={item.emoneyAmount < 100000 ? 'statusPill statusDanger' : 'statusPill statusPositive'}>
+                            {formatCurrency(item.emoneyAmount)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mobileDataRows">
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Channel Type</span><span className="mobileDataRowValue">{item.accountType || 'MNO'}</span></div>
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Channel Name</span><span className="mobileDataRowValue">{item.network || '--'}</span></div>
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Agent ID</span><span className="mobileDataRowValue">{item.agentId || '--'}</span></div>
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Account No.</span><span className="mobileDataRowValue">{item.mobileNumber || '--'}</span></div>
+                      </div>
+                      <div className="mobileDataActions">
+                        <button type="button" className="iconButton" aria-label="View account" onClick={() => setSelected(item)}>
+                          <Eye size={16} />
+                        </button>
+                        <button type="button" className="iconButton" aria-label="Edit account" onClick={() => setEdit(item)}>
+                          <Pencil size={16} />
+                        </button>
+                        <button type="button" className="iconButton dangerIcon" aria-label="Delete account" onClick={() => setDeleteTarget(item)}>
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
               )}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </>
         )}
 
         <div className="tableFooter">

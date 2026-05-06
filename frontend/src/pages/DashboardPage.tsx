@@ -19,7 +19,7 @@ export function DashboardPage() {
           <div>
             <p className="eyebrow">Workshop Overview</p>
             <h1>Mobi Dashboard</h1>
-            <p className="pageLead">Monitor deposit and withdrawal movement, cash channels, and account coverage from one control surface.</p>
+            {/* <p className="pageLead">Monitor deposit and withdrawal movement, cash channels, and account coverage from one control surface.</p> */}
           </div>
         </div>
         <aside className="summaryPanel">

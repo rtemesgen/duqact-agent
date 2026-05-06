@@ -70,44 +70,110 @@ export function ChannelManagementPage() {
         {tab === 'services' && <div className="toolbarRow toolbarRow-start"><label className="compactFilter">Filter by Country:<select value={country} onChange={e => setCountry(e.target.value)}>{countries.map(item => <option key={item} value={item}>{item === 'ALL' ? 'All Countries' : item}</option>)}</select></label></div>}
 
         {tab === 'types' ? (
-          <div className="tableWrap">
-            <table className="workshopTable">
-              <thead><tr><th>ID</th><th>Type Name</th><th>Description</th><th>Status</th><th>Created At</th><th>Actions</th></tr></thead>
-              <tbody>
-                {types.map((item, index) => (
-                  <tr key={item.id}>
-                    <td>#{index + 1}</td>
-                    <td className="tableStrong accentText">{item.name}</td>
-                    <td>{item.description || '--'}</td>
-                    <td><span className={`statusPill ${item.active ? 'statusPositive' : 'statusDanger'}`}>{item.active ? 'ACTIVE' : 'INACTIVE'}</span></td>
-                    <td>{formatDateTime(item.createdAt ?? null)}</td>
-                    <td><div className="actionRow"><button type="button" className="iconButton" onClick={() => setViewType(item)}><Eye size={16} /></button><button type="button" className="iconButton" onClick={() => setTypeEdit(item)}><Pencil size={16} /></button><button type="button" className="iconButton dangerIcon" onClick={() => setDeleteTarget({ kind: 'type', item })}><Trash2 size={16} /></button></div></td>
-                  </tr>
-                ))}
-                {types.length === 0 && <tr><td colSpan={6} className="emptyCell">No channel types created yet.</td></tr>}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <div className="tableWrap desktopOnly">
+              <table className="workshopTable">
+                <thead><tr><th>ID</th><th>Type Name</th><th>Description</th><th>Status</th><th>Created At</th><th>Actions</th></tr></thead>
+                <tbody>
+                  {types.map((item, index) => (
+                    <tr key={item.id}>
+                      <td>#{index + 1}</td>
+                      <td className="tableStrong accentText">{item.name}</td>
+                      <td>{item.description || '--'}</td>
+                      <td><span className={`statusPill ${item.active ? 'statusPositive' : 'statusDanger'}`}>{item.active ? 'ACTIVE' : 'INACTIVE'}</span></td>
+                      <td>{formatDateTime(item.createdAt ?? null)}</td>
+                      <td><div className="actionRow"><button type="button" className="iconButton" onClick={() => setViewType(item)}><Eye size={16} /></button><button type="button" className="iconButton" onClick={() => setTypeEdit(item)}><Pencil size={16} /></button><button type="button" className="iconButton dangerIcon" onClick={() => setDeleteTarget({ kind: 'type', item })}><Trash2 size={16} /></button></div></td>
+                    </tr>
+                  ))}
+                  {types.length === 0 && <tr><td colSpan={6} className="emptyCell">No channel types created yet.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mobileOnly">
+              {types.length === 0 ? (
+                <div className="surfaceCard surfaceCard-muted"><p className="pageLead">No channel types created yet.</p></div>
+              ) : (
+                <div className="mobileDataList">
+                  {types.map((item, index) => (
+                    <article key={item.id} className="mobileDataCard">
+                      <div className="mobileDataCardHeader">
+                        <div>
+                          <strong>{item.name}</strong>
+                          <span>#{index + 1}</span>
+                        </div>
+                        <div className="mobileDataBadgeColumn">
+                          <span className={`statusPill ${item.active ? 'statusPositive' : 'statusDanger'}`}>{item.active ? 'ACTIVE' : 'INACTIVE'}</span>
+                        </div>
+                      </div>
+                      <div className="mobileDataRows">
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Description</span><span className="mobileDataRowValue">{item.description || '--'}</span></div>
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Created</span><span className="mobileDataRowValue">{formatDateTime(item.createdAt ?? null)}</span></div>
+                      </div>
+                      <div className="mobileDataActions">
+                        <button type="button" className="iconButton" onClick={() => setViewType(item)}><Eye size={16} /></button>
+                        <button type="button" className="iconButton" onClick={() => setTypeEdit(item)}><Pencil size={16} /></button>
+                        <button type="button" className="iconButton dangerIcon" onClick={() => setDeleteTarget({ kind: 'type', item })}><Trash2 size={16} /></button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
         ) : (
-          <div className="tableWrap">
-            <table className="workshopTable">
-              <thead><tr><th>ID</th><th>Channel Name</th><th>Type</th><th>Country</th><th>Status</th><th>Created By</th><th>Actions</th></tr></thead>
-              <tbody>
-                {filteredServices.map((item, index) => (
-                  <tr key={item.id}>
-                    <td>#{index + 1}</td>
-                    <td className="tableStrong">{item.channelName}</td>
-                    <td><span className="typeBadge">{item.channelTypeName}</span></td>
-                    <td>{item.country}</td>
-                    <td><span className={`statusPill ${item.active ? 'statusPositive' : 'statusDanger'}`}>{item.active ? 'ACTIVE' : 'INACTIVE'}</span></td>
-                    <td>{item.createdByName ?? '--'}</td>
-                    <td><div className="actionRow"><button type="button" className="iconButton" onClick={() => setViewService(item)}><Eye size={16} /></button><button type="button" className="iconButton" onClick={() => setServiceEdit(item)}><Pencil size={16} /></button><button type="button" className="iconButton dangerIcon" onClick={() => setDeleteTarget({ kind: 'service', item })}><Trash2 size={16} /></button></div></td>
-                  </tr>
-                ))}
-                {filteredServices.length === 0 && <tr><td colSpan={7} className="emptyCell">No service channels created yet.</td></tr>}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <div className="tableWrap desktopOnly">
+              <table className="workshopTable">
+                <thead><tr><th>ID</th><th>Channel Name</th><th>Type</th><th>Country</th><th>Status</th><th>Created By</th><th>Actions</th></tr></thead>
+                <tbody>
+                  {filteredServices.map((item, index) => (
+                    <tr key={item.id}>
+                      <td>#{index + 1}</td>
+                      <td className="tableStrong">{item.channelName}</td>
+                      <td><span className="typeBadge">{item.channelTypeName}</span></td>
+                      <td>{item.country}</td>
+                      <td><span className={`statusPill ${item.active ? 'statusPositive' : 'statusDanger'}`}>{item.active ? 'ACTIVE' : 'INACTIVE'}</span></td>
+                      <td>{item.createdByName ?? '--'}</td>
+                      <td><div className="actionRow"><button type="button" className="iconButton" onClick={() => setViewService(item)}><Eye size={16} /></button><button type="button" className="iconButton" onClick={() => setServiceEdit(item)}><Pencil size={16} /></button><button type="button" className="iconButton dangerIcon" onClick={() => setDeleteTarget({ kind: 'service', item })}><Trash2 size={16} /></button></div></td>
+                    </tr>
+                  ))}
+                  {filteredServices.length === 0 && <tr><td colSpan={7} className="emptyCell">No service channels created yet.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mobileOnly">
+              {filteredServices.length === 0 ? (
+                <div className="surfaceCard surfaceCard-muted"><p className="pageLead">No service channels created yet.</p></div>
+              ) : (
+                <div className="mobileDataList">
+                  {filteredServices.map((item, index) => (
+                    <article key={item.id} className="mobileDataCard">
+                      <div className="mobileDataCardHeader">
+                        <div>
+                          <strong>{item.channelName}</strong>
+                          <span>#{index + 1} • {item.country}</span>
+                        </div>
+                        <div className="mobileDataBadgeColumn">
+                          <span className="typeBadge">{item.channelTypeName}</span>
+                          <span className={`statusPill ${item.active ? 'statusPositive' : 'statusDanger'}`}>{item.active ? 'ACTIVE' : 'INACTIVE'}</span>
+                        </div>
+                      </div>
+                      <div className="mobileDataRows">
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Created By</span><span className="mobileDataRowValue">{item.createdByName ?? '--'}</span></div>
+                      </div>
+                      <div className="mobileDataActions">
+                        <button type="button" className="iconButton" onClick={() => setViewService(item)}><Eye size={16} /></button>
+                        <button type="button" className="iconButton" onClick={() => setServiceEdit(item)}><Pencil size={16} /></button>
+                        <button type="button" className="iconButton dangerIcon" onClick={() => setDeleteTarget({ kind: 'service', item })}><Trash2 size={16} /></button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
         )}
       </section>
 
