@@ -39,6 +39,11 @@ function buildBlankAccount(serviceChannels: ServiceChannel[]): MnoAccount {
   };
 }
 
+function selectedServiceChannel(item: MnoAccount | null, serviceChannels: ServiceChannel[]) {
+  if (!item?.serviceChannelId) return null;
+  return serviceChannels.find((service) => service.id === item.serviceChannelId) ?? null;
+}
+
 export function MobiAgentSettingsPage() {
   const [items, setItems] = useState<MnoAccount[]>([]);
   const [serviceChannels, setServiceChannels] = useState<ServiceChannel[]>([]);
@@ -101,8 +106,14 @@ export function MobiAgentSettingsPage() {
     setModalError('');
     setModalSuccess('');
     try {
+      const service = selectedServiceChannel(edit, serviceChannels);
+      if (!service) throw new Error('Please select a service channel.');
+      const { serviceChannelId: _serviceChannelId, ...rest } = edit;
       const payload: MnoAccount = {
-        ...edit,
+        ...rest,
+        country: service.country,
+        network: service.channelName,
+        accountType: service.channelTypeName || edit.accountType || '',
         emoneyAmount: Math.max(0, Number(edit.emoneyAmount || 0)),
         cashAtHand: edit.id ? Math.max(0, Number(edit.cashAtHand || 0)) : 0,
         openingBalance: edit.id ? Math.max(0, Number(edit.openingBalance ?? edit.emoneyAmount ?? 0)) : Math.max(0, Number(edit.emoneyAmount || 0)),
