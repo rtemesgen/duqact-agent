@@ -10,7 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @RestController
 @RequestMapping("/api/mno-transactions")
@@ -27,12 +30,17 @@ record TransactionRequest(Long accountId, TransactionType transactionType, BigDe
 @Service
 class TransactionService {
     private final MnoAccountRepository accounts; private final MnoTransactionRepository transactions; private final MnoProviderAdapter provider;
+    private final Map<String, Instant> recentFingerprints = new ConcurrentHashMap<>();
+    private static final long DUPLICATE_WINDOW_SECONDS = 10;
     TransactionService(MnoAccountRepository accounts, MnoTransactionRepository transactions, MnoProviderAdapter provider) { this.accounts = accounts; this.transactions = transactions; this.provider = provider; }
 
     @Transactional
     MnoTransaction record(TransactionRequest request, Long userId) {
         if (request.accountId() == null) throw new IllegalArgumentException("Account is required");
+        if (request.transactionType() == null) throw new IllegalArgumentException("Transaction type is required");
         if (request.amount() == null || request.amount().signum() <= 0) throw new IllegalArgumentException("Amount must be positive");
+        String fingerprint = fingerprint(request, userId);
+        reserveFingerprint(fingerprint);
         MnoAccount account = accounts.findById(request.accountId()).orElseThrow();
         if (!account.getUserId().equals(userId)) throw new IllegalArgumentException("Account not found");
 
@@ -80,13 +88,38 @@ class TransactionService {
             accounts.save(account);
             tx.setStatus(TransactionStatus.COMPLETED);
             tx.setBalance(newEmoney);
+            recentFingerprints.put(fingerprint, Instant.now());
         } catch (RuntimeException ex) {
-            tx.setStatus(TransactionStatus.FAILED); transactions.save(tx); throw ex;
+            tx.setStatus(TransactionStatus.FAILED); transactions.save(tx); recentFingerprints.remove(fingerprint); throw ex;
         }
         return transactions.save(tx);
     }
 
     private BigDecimal safe(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
+    }
+    private void reserveFingerprint(String fingerprint) {
+        cleanupFingerprints();
+        Instant now = Instant.now();
+        Instant existing = recentFingerprints.putIfAbsent(fingerprint, now);
+        if (existing != null && existing.plusSeconds(DUPLICATE_WINDOW_SECONDS).isAfter(now)) {
+            throw new IllegalStateException("Duplicate transaction request detected. Please wait for the current save to finish.");
+        }
+        recentFingerprints.put(fingerprint, now);
+    }
+    private void cleanupFingerprints() {
+        Instant cutoff = Instant.now().minusSeconds(DUPLICATE_WINDOW_SECONDS);
+        recentFingerprints.entrySet().removeIf(entry -> entry.getValue().isBefore(cutoff));
+    }
+    private String fingerprint(TransactionRequest request, Long userId) {
+        return userId + "|" +
+                request.accountId() + "|" +
+                request.transactionType() + "|" +
+                request.amount().stripTrailingZeros().toPlainString() + "|" +
+                normalized(request.clientPhone()) + "|" +
+                normalized(request.clientId());
+    }
+    private String normalized(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
     }
 }

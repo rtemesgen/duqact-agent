@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Eye, Plus, Search } from 'lucide-react';
 import { api } from '../api/client';
 import type { DashboardStats, MnoAccount, MnoTransaction, TransactionType } from '../api/types';
@@ -17,9 +17,13 @@ export function MNOWalletTransactionsPage() {
   const [selected, setSelected] = useState<MnoTransaction | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [modalSuccess, setModalSuccess] = useState('');
+  const [modalError, setModalError] = useState('');
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const saveLock = useRef(false);
 
   const load = async () => {
     setLoading(true);
@@ -45,16 +49,29 @@ export function MNOWalletTransactionsPage() {
   }, []);
 
   async function save() {
-    if (!edit) return;
+    if (!edit || saveLock.current) return;
+    saveLock.current = true;
+    setSaving(true);
     setMessage('');
     setError('');
+    setModalSuccess('');
+    setModalError('');
     try {
       await api.recordTransaction(edit);
-      setMessage('Transaction recorded');
-      setEdit(null);
-      load();
-    } catch (error) {
-      setError(error instanceof Error ? error.message : 'Transaction failed');
+      await load();
+      const successText = 'Transaction recorded successfully.';
+      setModalSuccess(successText);
+      setMessage(successText);
+      window.setTimeout(() => {
+        setEdit(null);
+        setModalSuccess('');
+        setModalError('');
+      }, 1000);
+    } catch (saveError) {
+      setModalError(saveError instanceof Error ? saveError.message : 'Transaction failed.');
+    } finally {
+      setSaving(false);
+      saveLock.current = false;
     }
   }
 
@@ -76,6 +93,7 @@ export function MNOWalletTransactionsPage() {
   const invalidEmoney = nextEmoney < 0;
   const invalidCash = nextCash < 0;
   const invalidBalanceMessage = invalidEmoney ? 'Insufficient e-cash balance.' : invalidCash ? 'Insufficient cash at hand.' : '';
+  const submitDisabled = !edit?.amount || !edit?.accountId || invalidEmoney || invalidCash;
 
   useEffect(() => {
     setPage(1);
@@ -92,7 +110,7 @@ export function MNOWalletTransactionsPage() {
       <div className="metricsGrid metricsGrid-four">
         <DashboardKPICard label="Total Deposits" value={formatCurrency(stats?.totalDeposits)} hint="E-cash reduced, cash increased" accent="green" />
         <DashboardKPICard label="Total Withdrawals" value={formatCurrency(stats?.totalWithdrawals)} hint="Cash reduced, e-cash increased" />
-        <DashboardKPICard label="Net E-cash Change" value={formatCurrency(stats?.netFloatChange)} hint="Withdrawals minus deposits" accent="gold" />
+        <DashboardKPICard label="Net E-cash Change" value={formatCurrency(Math.abs(Number(stats?.netFloatChange ?? 0)))} hint="Difference between withdrawals and deposits" accent="gold" />
         <DashboardKPICard label="Transaction Count" value={stats?.transactionCount ?? 0} hint="Recorded transactions" />
       </div>
 
@@ -102,7 +120,7 @@ export function MNOWalletTransactionsPage() {
       <section className="surfaceCard">
         <div className="toolbarRow">
           <label className="searchField"><Search size={16} /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search transactions..." /></label>
-          <button className="primaryButton" onClick={() => setEdit({ ...blank, accountId: accounts[0]?.id ?? 0 })}><Plus size={18} />Record Transaction</button>
+          <button className="primaryButton" onClick={() => { setModalError(''); setModalSuccess(''); setEdit({ ...blank, accountId: accounts[0]?.id ?? 0 }); }}><Plus size={18} />Record Transaction</button>
         </div>
 
         {loading ? (
@@ -120,7 +138,7 @@ export function MNOWalletTransactionsPage() {
                       <td>{item.agentNumber || '--'}</td>
                       <td>{item.clientPhone || '--'}</td>
                       <td><span className={`statusPill ${item.transactionType === 'WITHDRAW' || item.transactionType === 'FLOAT_WITHDRAWAL' ? 'statusPositive' : 'statusNeutral'}`}>{transactionLabel(item.transactionType)}</span></td>
-                      <td className={item.transactionType === 'WITHDRAW' || item.transactionType === 'FLOAT_WITHDRAWAL' ? 'tablePositive' : 'tableNegative'}>{item.transactionType === 'WITHDRAW' || item.transactionType === 'FLOAT_WITHDRAWAL' ? '+' : '-'}{formatCurrency(item.amount)}</td>
+                      <td className={item.transactionType === 'WITHDRAW' || item.transactionType === 'FLOAT_WITHDRAWAL' ? 'tablePositive' : 'accentText'}>{formatCurrency(item.amount)}</td>
                       <td>{formatCurrency(item.previousEmoney ?? item.previousBalance)}</td>
                       <td className="tableStrong">{formatCurrency(item.newEmoney ?? item.balance)}</td>
                       <td><button type="button" className="iconButton" aria-label="View transaction" onClick={() => setSelected(item)}><Eye size={16} /></button></td>
@@ -147,7 +165,7 @@ export function MNOWalletTransactionsPage() {
                           </div>
                           <div className="mobileDataBadgeColumn">
                             <span className={`statusPill ${positive ? 'statusPositive' : 'statusNeutral'}`}>{transactionLabel(item.transactionType)}</span>
-                            <span className={positive ? 'tablePositive' : 'tableNegative'}>{positive ? '+' : '-'}{formatCurrency(item.amount)}</span>
+                            <span className={positive ? 'tablePositive' : 'accentText'}>{formatCurrency(item.amount)}</span>
                           </div>
                         </div>
                         <div className="mobileDataRows">
@@ -179,12 +197,28 @@ export function MNOWalletTransactionsPage() {
       </section>
 
       {edit && (
-        <Modal title="Record Transaction" onClose={() => setEdit(null)} onSubmit={e => { e.preventDefault(); save(); }} submitLabel="Record Transaction" size="lg">
+        <Modal
+          title="Record Transaction"
+          onClose={() => {
+            if (saving) return;
+            setEdit(null);
+            setModalSuccess('');
+            setModalError('');
+          }}
+          onSubmit={e => { e.preventDefault(); void save(); }}
+          submitLabel="Save"
+          busy={saving}
+          busyLabel="Saving..."
+          submitDisabled={submitDisabled}
+          successMessage={modalSuccess}
+          errorMessage={modalError}
+          size="lg"
+        >
           <div className="formGrid formGrid-two">
             <label>Phone Number<input value={edit.clientPhone} onChange={e => setEdit({ ...edit, clientPhone: e.target.value })} placeholder="+256..." /></label>
             <label>Account<select value={edit.accountId} onChange={e => setEdit({ ...edit, accountId: Number(e.target.value) })}>{accounts.map(account => <option key={account.id} value={account.id}>{account.name} ({account.network})</option>)}</select></label>
             <label>Transaction Type<select value={edit.transactionType} onChange={e => setEdit({ ...edit, transactionType: e.target.value as TransactionType })}><option value="DEPOSIT">Deposit</option><option value="FLOAT_WITHDRAWAL">Withdrawal</option><option value="FLOAT_TOP_UP">Float Top-up</option></select></label>
-            <label>Amount (UGX)<input type="number" value={edit.amount} onChange={e => setEdit({ ...edit, amount: Number(e.target.value) })} min={0} /></label>
+            <label>Amount (UGX)<input type="number" value={edit.amount} onChange={e => setEdit({ ...edit, amount: Math.max(0, Number(e.target.value)) })} min={0} /></label>
             <label>Client ID<input value={edit.clientId} onChange={e => setEdit({ ...edit, clientId: e.target.value })} placeholder="Client ID" /></label>
           </div>
           <div className="balancePreview">
@@ -207,7 +241,7 @@ export function MNOWalletTransactionsPage() {
             <div className="detailCard"><span>Client ID</span><strong>{selected.clientId || selected.clientName || '--'}</strong></div>
             <div className="detailCard"><span>Status</span><strong>{selected.status}</strong></div>
             <div className="detailCard"><span>Transaction Type</span><strong>{transactionLabel(selected.transactionType)}</strong></div>
-            <div className="detailCard"><span>Amount</span><strong className={selected.transactionType === 'WITHDRAW' || selected.transactionType === 'FLOAT_WITHDRAWAL' ? 'tablePositive' : 'tableNegative'}>{formatCurrency(selected.amount)}</strong></div>
+            <div className="detailCard"><span>Amount</span><strong className={selected.transactionType === 'WITHDRAW' || selected.transactionType === 'FLOAT_WITHDRAWAL' ? 'tablePositive' : 'accentText'}>{formatCurrency(selected.amount)}</strong></div>
             <div className="detailCard"><span>Previous E-cash</span><strong>{formatCurrency(selected.previousEmoney ?? selected.previousBalance)}</strong></div>
             <div className="detailCard"><span>New E-cash</span><strong>{formatCurrency(selected.newEmoney ?? selected.balance)}</strong></div>
             <div className="detailCard"><span>Previous Cash at Hand</span><strong>{formatCurrency(selected.previousCashAtHand)}</strong></div>

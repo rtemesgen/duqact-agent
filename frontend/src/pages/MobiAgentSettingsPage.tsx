@@ -1,12 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Eye, Pencil, Plus, Search, Trash2, TriangleAlert } from 'lucide-react';
 import { api } from '../api/client';
-import type { DashboardStats, MnoAccount } from '../api/types';
+import type { DashboardStats, MnoAccount, ServiceChannel } from '../api/types';
 import { DashboardKPICard } from '../components/DashboardKPICard';
 import { Modal } from '../components/Modal';
 import { formatCurrency } from '../lib/format';
 
 const blank: MnoAccount = {
+  serviceChannelId: undefined,
   name: '',
   country: '',
   mobileNumber: '',
@@ -22,8 +23,25 @@ const blank: MnoAccount = {
 
 const PAGE_SIZE = 5;
 
+function resolveServiceChannelId(item: MnoAccount, serviceChannels: ServiceChannel[]) {
+  if (item.serviceChannelId) return item.serviceChannelId;
+  const match = serviceChannels.find((service) =>
+    service.channelName.toLowerCase() === (item.network || '').toLowerCase()
+    && service.country.toLowerCase() === (item.country || '').toLowerCase(),
+  );
+  return match?.id;
+}
+
+function buildBlankAccount(serviceChannels: ServiceChannel[]): MnoAccount {
+  return {
+    ...blank,
+    serviceChannelId: serviceChannels[0]?.id,
+  };
+}
+
 export function MobiAgentSettingsPage() {
   const [items, setItems] = useState<MnoAccount[]>([]);
+  const [serviceChannels, setServiceChannels] = useState<ServiceChannel[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [edit, setEdit] = useState<MnoAccount | null>(null);
   const [selected, setSelected] = useState<MnoAccount | null>(null);
@@ -32,17 +50,22 @@ export function MobiAgentSettingsPage() {
   const [deleteRemarks, setDeleteRemarks] = useState('');
   const [notice, setNotice] = useState('');
   const [error, setError] = useState('');
+  const [modalSuccess, setModalSuccess] = useState('');
+  const [modalError, setModalError] = useState('');
+  const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const saveLock = useRef(false);
 
   const load = async () => {
     setLoading(true);
     setError('');
     try {
-      const [accountData, dashboardData] = await Promise.all([api.accounts(), api.dashboard()]);
+      const [accountData, dashboardData, channelData] = await Promise.all([api.accounts(), api.dashboard(), api.serviceChannels()]);
       setItems(accountData);
       setStats(dashboardData);
+      setServiceChannels(channelData);
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Accounts could not be loaded.');
     } finally {
@@ -54,17 +77,51 @@ export function MobiAgentSettingsPage() {
     void load();
   }, []);
 
+  function openCreateModal() {
+    setModalSuccess('');
+    setModalError('');
+    setEdit(buildBlankAccount(serviceChannels));
+  }
+
+  function openEditModal(item: MnoAccount) {
+    setModalSuccess('');
+    setModalError('');
+    setEdit({
+      ...item,
+      serviceChannelId: resolveServiceChannelId(item, serviceChannels),
+    });
+  }
+
   async function save() {
-    if (!edit) return;
+    if (!edit || saveLock.current) return;
+    saveLock.current = true;
+    setSaving(true);
     setError('');
     setNotice('');
+    setModalError('');
+    setModalSuccess('');
     try {
-      await api.saveAccount(edit);
-      setNotice(edit.id ? 'Account updated.' : 'Account created.');
-      setEdit(null);
-      load();
+      const payload: MnoAccount = {
+        ...edit,
+        emoneyAmount: Math.max(0, Number(edit.emoneyAmount || 0)),
+        cashAtHand: edit.id ? Math.max(0, Number(edit.cashAtHand || 0)) : 0,
+        openingBalance: edit.id ? Math.max(0, Number(edit.openingBalance ?? edit.emoneyAmount ?? 0)) : Math.max(0, Number(edit.emoneyAmount || 0)),
+      };
+      await api.saveAccount(payload);
+      await load();
+      const successText = edit.id ? 'Account updated successfully.' : 'Account created successfully.';
+      setModalSuccess(successText);
+      setNotice(successText);
+      window.setTimeout(() => {
+        setEdit(null);
+        setModalSuccess('');
+        setModalError('');
+      }, 1000);
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : 'Account could not be saved.');
+      setModalError(saveError instanceof Error ? saveError.message : 'Account could not be saved.');
+    } finally {
+      setSaving(false);
+      saveLock.current = false;
     }
   }
 
@@ -78,7 +135,7 @@ export function MobiAgentSettingsPage() {
       setDeleteRemarks('');
       setDeleteTarget(null);
       setNotice('Account deleted.');
-      load();
+      await load();
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : 'Account could not be deleted.');
     }
@@ -98,6 +155,7 @@ export function MobiAgentSettingsPage() {
 
   const totalNetworks = useMemo(() => new Set(items.map((item) => item.network).filter(Boolean)).size, [items]);
   const totalInvestment = (stats?.totalCashAtHand ?? 0) + (stats?.totalEmoney ?? 0);
+  const accountFormInvalid = !edit?.name.trim() || !edit?.mobileNumber.trim() || !edit?.serviceChannelId || Number(edit.emoneyAmount) < 0;
 
   useEffect(() => {
     setPage(1);
@@ -113,21 +171,22 @@ export function MobiAgentSettingsPage() {
         <div>
           <p className="eyebrow">Agent Operations</p>
           <h1>Mobi Account Setting</h1>
-          <p className="pageLead">Manage MNO accounts, cash positions, and e-money balances in the same workshop flow as the reference product.</p>
+          <p className="pageLead">Manage MNO accounts, balances, and service-channel-linked account records from one place.</p>
         </div>
-        <button className="primaryButton" onClick={() => setEdit(blank)}>
+        <button className="primaryButton" onClick={openCreateModal} disabled={serviceChannels.length === 0}>
           <Plus size={18} />
           Add Account
         </button>
       </div>
 
+      {serviceChannels.length === 0 && !loading && <p className="errorBanner">Create a service channel first before adding an account.</p>}
       {notice && <p className="noticeBanner">{notice}</p>}
       {error && <p className="errorBanner">{error}</p>}
 
       <div className="metricsGrid metricsGrid-four">
         <DashboardKPICard label="Number of Networks" value={totalNetworks} />
         <DashboardKPICard label="Cash At Hand" value={formatCurrency(stats?.totalCashAtHand)} accent="green" />
-        <DashboardKPICard label="E-Money" value={formatCurrency(stats?.totalEmoney)} accent="gold" />
+        <DashboardKPICard label="E-Cash Balance" value={formatCurrency(stats?.totalEmoney)} accent="gold" />
         <DashboardKPICard label="Total Investment" value={formatCurrency(totalInvestment)} />
       </div>
 
@@ -149,11 +208,10 @@ export function MobiAgentSettingsPage() {
                   <tr>
                     <th>#</th>
                     <th>Account</th>
-                    <th>Channel Type</th>
-                    <th>Channel Name</th>
+                    <th>Service Channel</th>
                     <th>Agent ID</th>
                     <th>Account No.</th>
-                    <th>Balance (UGX)</th>
+                    <th>Balance</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -164,11 +222,15 @@ export function MobiAgentSettingsPage() {
                       <td>
                         <div className="tablePrimaryBlock">
                           <strong>{item.name}</strong>
-                          <span>{item.country || 'No country set'}</span>
+                          <span>{item.currency || 'UGX'}</span>
                         </div>
                       </td>
-                      <td>{item.accountType || 'MNO'}</td>
-                      <td>{item.network || '--'}</td>
+                      <td>
+                        <div className="tablePrimaryBlock">
+                          <strong>{item.network || '--'}</strong>
+                          <span>{item.accountType || 'Channel'}</span>
+                        </div>
+                      </td>
                       <td>{item.agentId || '--'}</td>
                       <td>{item.mobileNumber || '--'}</td>
                       <td className={(item.emoneyAmount ?? 0) < 100000 ? 'tableNegative' : 'tablePositive'}>{formatCurrency(item.emoneyAmount)}</td>
@@ -177,7 +239,7 @@ export function MobiAgentSettingsPage() {
                           <button type="button" className="iconButton" aria-label="View account" onClick={() => setSelected(item)}>
                             <Eye size={16} />
                           </button>
-                          <button type="button" className="iconButton" aria-label="Edit account" onClick={() => setEdit(item)}>
+                          <button type="button" className="iconButton" aria-label="Edit account" onClick={() => openEditModal(item)}>
                             <Pencil size={16} />
                           </button>
                           <button type="button" className="iconButton dangerIcon" aria-label="Delete account" onClick={() => setDeleteTarget(item)}>
@@ -189,7 +251,7 @@ export function MobiAgentSettingsPage() {
                   ))}
                   {filtered.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="emptyCell">
+                      <td colSpan={7} className="emptyCell">
                         No MNO accounts found.
                       </td>
                     </tr>
@@ -208,7 +270,7 @@ export function MobiAgentSettingsPage() {
                       <div className="mobileDataCardHeader">
                         <div>
                           <strong>{item.name}</strong>
-                          <span>#{(page - 1) * PAGE_SIZE + index + 1} • {item.country || 'No country set'}</span>
+                          <span>#{(page - 1) * PAGE_SIZE + index + 1} • {item.currency || 'UGX'}</span>
                         </div>
                         <div className="mobileDataBadgeColumn">
                           <span className={item.emoneyAmount < 100000 ? 'statusPill statusDanger' : 'statusPill statusPositive'}>
@@ -217,8 +279,8 @@ export function MobiAgentSettingsPage() {
                         </div>
                       </div>
                       <div className="mobileDataRows">
-                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Channel Type</span><span className="mobileDataRowValue">{item.accountType || 'MNO'}</span></div>
-                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Channel Name</span><span className="mobileDataRowValue">{item.network || '--'}</span></div>
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Service Channel</span><span className="mobileDataRowValue">{item.network || '--'}</span></div>
+                        <div className="mobileDataRow"><span className="mobileDataRowLabel">Channel Type</span><span className="mobileDataRowValue">{item.accountType || '--'}</span></div>
                         <div className="mobileDataRow"><span className="mobileDataRowLabel">Agent ID</span><span className="mobileDataRowValue">{item.agentId || '--'}</span></div>
                         <div className="mobileDataRow"><span className="mobileDataRowLabel">Account No.</span><span className="mobileDataRowValue">{item.mobileNumber || '--'}</span></div>
                       </div>
@@ -226,7 +288,7 @@ export function MobiAgentSettingsPage() {
                         <button type="button" className="iconButton" aria-label="View account" onClick={() => setSelected(item)}>
                           <Eye size={16} />
                         </button>
-                        <button type="button" className="iconButton" aria-label="Edit account" onClick={() => setEdit(item)}>
+                        <button type="button" className="iconButton" aria-label="Edit account" onClick={() => openEditModal(item)}>
                           <Pencil size={16} />
                         </button>
                         <button type="button" className="iconButton dangerIcon" aria-label="Delete account" onClick={() => setDeleteTarget(item)}>
@@ -262,39 +324,46 @@ export function MobiAgentSettingsPage() {
       {edit && (
         <Modal
           title={edit.id ? 'Edit Account' : 'Add New Account'}
-          onClose={() => setEdit(null)}
+          onClose={() => {
+            if (saving) return;
+            setEdit(null);
+            setModalSuccess('');
+            setModalError('');
+          }}
           onSubmit={(e) => {
             e.preventDefault();
-            save();
+            void save();
           }}
-          submitLabel={edit.id ? 'Save Changes' : 'Create Account'}
+          submitLabel="Save"
+          busy={saving}
+          busyLabel="Saving..."
+          submitDisabled={accountFormInvalid}
+          successMessage={modalSuccess}
+          errorMessage={modalError}
           headerTone="accent"
           size="lg"
         >
           <div className="formGrid formGrid-two">
             <label>
+              Service Channel
+              <select value={edit.serviceChannelId ?? ''} onChange={(e) => setEdit({ ...edit, serviceChannelId: Number(e.target.value) || undefined })}>
+                <option value="">Select service channel</option>
+                {serviceChannels.map((service) => (
+                  <option key={service.id} value={service.id}>{service.channelName} ({service.channelTypeName || 'Channel'})</option>
+                ))}
+              </select>
+            </label>
+            <label>
               Account Name
               <input value={edit.name} onChange={(e) => setEdit({ ...edit, name: e.target.value })} placeholder="MTN Agent Wallet 1" />
             </label>
             <label>
-              Country
-              <input value={edit.country} onChange={(e) => setEdit({ ...edit, country: e.target.value })} placeholder="Uganda" />
+              Account Number
+              <input value={edit.mobileNumber} onChange={(e) => setEdit({ ...edit, mobileNumber: e.target.value })} placeholder="Enter account number" />
             </label>
             <label>
               Agent ID
               <input value={edit.agentId ?? ''} onChange={(e) => setEdit({ ...edit, agentId: e.target.value })} placeholder="AGT-123" />
-            </label>
-            <label>
-              Channel Name
-              <input value={edit.network} onChange={(e) => setEdit({ ...edit, network: e.target.value })} placeholder="MTN Mobile Money" />
-            </label>
-            <label>
-              Account Number
-              <input value={edit.mobileNumber} onChange={(e) => setEdit({ ...edit, mobileNumber: e.target.value })} placeholder="Mobile or Bank No." />
-            </label>
-            <label>
-              Channel Type
-              <input value={edit.accountType} onChange={(e) => setEdit({ ...edit, accountType: e.target.value })} placeholder="MNO" />
             </label>
             <label>
               Currency
@@ -305,16 +374,8 @@ export function MobiAgentSettingsPage() {
               </select>
             </label>
             <label>
-              Opening Balance
-              <input type="number" value={edit.openingBalance ?? 0} onChange={(e) => setEdit({ ...edit, openingBalance: Number(e.target.value) })} min={0} />
-            </label>
-            <label>
-              E-Money
-              <input type="number" value={edit.emoneyAmount} onChange={(e) => setEdit({ ...edit, emoneyAmount: Number(e.target.value) })} min={0} />
-            </label>
-            <label>
-              Cash At Hand
-              <input type="number" value={edit.cashAtHand} onChange={(e) => setEdit({ ...edit, cashAtHand: Number(e.target.value) })} min={0} />
+              Balance
+              <input type="number" value={edit.emoneyAmount ?? 0} onChange={(e) => setEdit({ ...edit, emoneyAmount: Math.max(0, Number(e.target.value)) })} min={0} />
             </label>
             <label className="detailCard-wide">
               Remarks
@@ -328,14 +389,13 @@ export function MobiAgentSettingsPage() {
         <Modal title="Account Details" onClose={() => setSelected(null)} onSubmit={(e) => { e.preventDefault(); setSelected(null); }} submitLabel="Close" size="lg">
           <div className="detailGrid">
             <div className="detailCard"><span>Account</span><strong>{selected.name}</strong></div>
+            <div className="detailCard"><span>Service Channel</span><strong>{selected.network || '--'}</strong></div>
+            <div className="detailCard"><span>Channel Type</span><strong>{selected.accountType || '--'}</strong></div>
             <div className="detailCard"><span>Country</span><strong>{selected.country || '--'}</strong></div>
-            <div className="detailCard"><span>Channel Type</span><strong>{selected.accountType || 'MNO'}</strong></div>
-            <div className="detailCard"><span>Channel Name</span><strong>{selected.network || '--'}</strong></div>
             <div className="detailCard"><span>Agent ID</span><strong>{selected.agentId || '--'}</strong></div>
             <div className="detailCard"><span>Account No.</span><strong>{selected.mobileNumber || '--'}</strong></div>
             <div className="detailCard"><span>Currency</span><strong>{selected.currency || 'UGX'}</strong></div>
-            <div className="detailCard"><span>Opening Balance</span><strong>{formatCurrency(selected.openingBalance)}</strong></div>
-            <div className="detailCard"><span>E-Money</span><strong>{formatCurrency(selected.emoneyAmount)}</strong></div>
+            <div className="detailCard"><span>Balance</span><strong>{formatCurrency(selected.emoneyAmount)}</strong></div>
             <div className="detailCard"><span>Cash At Hand</span><strong>{formatCurrency(selected.cashAtHand)}</strong></div>
             <div className="detailCard detailCard-wide"><span>Remarks</span><strong>{selected.remarks || '--'}</strong></div>
           </div>
@@ -352,7 +412,7 @@ export function MobiAgentSettingsPage() {
           }}
           onSubmit={(e) => {
             e.preventDefault();
-            confirmDelete();
+            void confirmDelete();
           }}
           submitLabel="Delete Account"
           size="lg"

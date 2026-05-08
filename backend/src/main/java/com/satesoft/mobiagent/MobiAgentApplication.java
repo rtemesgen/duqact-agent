@@ -80,13 +80,18 @@ public class MobiAgentApplication {
             }
 
             if (agent != null && accounts.findByUserId(agent.getId()).isEmpty()) {
+                ServiceChannel defaultService = serviceChannels.findByUserIdOrderByCreatedAtAsc(agent.getId()).stream()
+                        .filter(item -> item.getChannelName() != null && item.getChannelName().equalsIgnoreCase("MTN Mobile Money"))
+                        .findFirst()
+                        .orElse(null);
                 MnoAccount account = new MnoAccount();
                 account.setUserId(agent.getId());
+                account.setServiceChannelId(defaultService == null ? null : defaultService.getId());
                 account.setName("MTN Agent");
-                account.setCountry("Uganda");
                 account.setMobileNumber("0763833834");
                 account.setAgentId("AGT-1234");
-                account.setNetwork("MTN Mobile Money");
+                account.setCountry(defaultService == null ? "Uganda" : defaultService.getCountry());
+                account.setNetwork(defaultService == null ? "MTN Mobile Money" : defaultService.getChannelName());
                 account.setAccountType("MNO");
                 account.setCurrency("UGX");
                 account.setOpeningBalance(new BigDecimal("1000000"));

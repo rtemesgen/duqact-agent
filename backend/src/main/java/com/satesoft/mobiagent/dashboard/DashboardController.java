@@ -49,7 +49,7 @@ public class DashboardController {
                 walletBalance,
                 deposits,
                 withdrawals,
-                withdrawals.subtract(deposits)
+                withdrawals.subtract(deposits).abs()
         );
     }
 

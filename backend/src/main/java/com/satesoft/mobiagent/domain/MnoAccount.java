@@ -6,10 +6,11 @@ import java.math.BigDecimal;
 @Entity
 public class MnoAccount {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
-    private Long userId; private String name; private String country; private String mobileNumber; private String agentId;
+    private Long userId; private Long serviceChannelId; private String name; private String country; private String mobileNumber; private String agentId;
     private BigDecimal emoneyAmount = BigDecimal.ZERO; private String network; private BigDecimal cashAtHand = BigDecimal.ZERO; private String accountType;
     private String currency; private BigDecimal openingBalance = BigDecimal.ZERO; private String remarks;
     public Long getId() { return id; } public Long getUserId() { return userId; } public void setUserId(Long userId) { this.userId = userId; }
+    public Long getServiceChannelId() { return serviceChannelId; } public void setServiceChannelId(Long serviceChannelId) { this.serviceChannelId = serviceChannelId; }
     public String getName() { return name; } public void setName(String name) { this.name = name; } public String getCountry() { return country; } public void setCountry(String country) { this.country = country; }
     public String getMobileNumber() { return mobileNumber; } public void setMobileNumber(String mobileNumber) { this.mobileNumber = mobileNumber; } public BigDecimal getEmoneyAmount() { return emoneyAmount; } public void setEmoneyAmount(BigDecimal emoneyAmount) { this.emoneyAmount = emoneyAmount; }
     public String getAgentId() { return agentId; } public void setAgentId(String agentId) { this.agentId = agentId; }
