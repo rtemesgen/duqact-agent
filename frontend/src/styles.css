@@ -260,6 +260,12 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   color: var(--muted);
   font-size: .84rem;
 }
+.deskHeaderActions {
+  display: inline-flex;
+  align-items: center;
+  gap: .75rem;
+  flex-wrap: wrap;
+}
 .receiptPreview {
   height: 100%;
   display: grid;
@@ -536,11 +542,15 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   font-weight: 800;
   letter-spacing: .06em;
   text-transform: uppercase;
+  flex: 0 0 auto;
+  min-width: 0;
 }
 .mobileDataRowValue {
   color: #fff;
   font-weight: 700;
   text-align: right;
+  margin-left: auto;
+  max-width: 60%;
   overflow-wrap: anywhere;
 }
 .mobileDataActions {
@@ -1057,6 +1067,11 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
     gap: .75rem;
   }
 
+  .deskHeaderActions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .compactFilter {
     width: 100%;
     align-items: stretch;
@@ -1304,14 +1319,6 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   .miniStats,
   .summaryPanelList {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .mobileDataRow {
-    flex-direction: column;
-  }
-
-  .mobileDataRowValue {
-    text-align: left;
   }
 
   .pageHero h1 {
