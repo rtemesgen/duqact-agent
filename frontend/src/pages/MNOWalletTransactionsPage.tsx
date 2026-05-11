@@ -14,6 +14,7 @@ export function MNOWalletTransactionsPage() {
   const [items, setItems] = useState<MnoTransaction[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [edit, setEdit] = useState<typeof blank | null>(null);
+  const [balancesOpen, setBalancesOpen] = useState(false);
   const [selected, setSelected] = useState<MnoTransaction | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -64,6 +65,7 @@ export function MNOWalletTransactionsPage() {
       setMessage(successText);
       window.setTimeout(() => {
         setEdit(null);
+        setBalancesOpen(false);
         setModalSuccess('');
         setModalError('');
       }, 1000);
@@ -120,7 +122,7 @@ export function MNOWalletTransactionsPage() {
       <section className="surfaceCard">
         <div className="toolbarRow">
           <label className="searchField"><Search size={16} /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search transactions..." /></label>
-          <button className="primaryButton" onClick={() => { setModalError(''); setModalSuccess(''); setEdit({ ...blank, accountId: accounts[0]?.id ?? 0 }); }}><Plus size={18} />Record Transaction</button>
+          <button className="primaryButton" onClick={() => { setBalancesOpen(false); setModalError(''); setModalSuccess(''); setEdit({ ...blank, accountId: accounts[0]?.id ?? 0 }); }}><Plus size={18} />Record Transaction</button>
         </div>
 
         {loading ? (
@@ -202,6 +204,7 @@ export function MNOWalletTransactionsPage() {
           onClose={() => {
             if (saving) return;
             setEdit(null);
+            setBalancesOpen(false);
             setModalSuccess('');
             setModalError('');
           }}
@@ -213,6 +216,18 @@ export function MNOWalletTransactionsPage() {
           successMessage={modalSuccess}
           errorMessage={modalError}
           size="lg"
+          headerActions={(
+            <button
+              type="button"
+              className="iconButton iconButton-ghost"
+              aria-label="View balances"
+              title="View balances"
+              onClick={() => setBalancesOpen(true)}
+              disabled={saving}
+            >
+              <Eye size={16} />
+            </button>
+          )}
         >
           <div className="formGrid formGrid-two">
             <label>Phone Number<input value={edit.clientPhone} onChange={e => setEdit({ ...edit, clientPhone: e.target.value })} placeholder="+256..." /></label>
@@ -221,6 +236,21 @@ export function MNOWalletTransactionsPage() {
             <label>Amount (UGX)<input type="number" value={edit.amount} onChange={e => setEdit({ ...edit, amount: Math.max(0, Number(e.target.value)) })} min={0} /></label>
             <label>Client ID<input value={edit.clientId} onChange={e => setEdit({ ...edit, clientId: e.target.value })} placeholder="Client ID" /></label>
           </div>
+          {invalidBalanceMessage && <p className="errorBanner">{invalidBalanceMessage}</p>}
+        </Modal>
+      )}
+
+      {edit && balancesOpen && (
+        <Modal
+          title="Balance Preview"
+          onClose={() => setBalancesOpen(false)}
+          onSubmit={e => {
+            e.preventDefault();
+            setBalancesOpen(false);
+          }}
+          submitLabel="Close"
+          size="lg"
+        >
           <div className="balancePreview">
             <div><span>Previous E-cash</span><strong>{formatCurrency(previousEmoney)}</strong></div>
             <div><span>New E-cash</span><strong>{invalidEmoney ? 'Unavailable' : formatCurrency(nextEmoney)}</strong></div>

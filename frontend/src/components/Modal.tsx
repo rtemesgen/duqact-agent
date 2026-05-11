@@ -12,7 +12,8 @@ export function Modal({
   successMessage,
   errorMessage,
   size = 'md',
-  headerTone = 'default'
+  headerTone = 'default',
+  headerActions
 }: {
   title: string;
   children: ReactNode;
@@ -26,13 +27,17 @@ export function Modal({
   errorMessage?: string;
   size?: 'md' | 'lg';
   headerTone?: 'default' | 'accent';
+  headerActions?: ReactNode;
 }) {
   return (
     <div className="modalShade">
       <form className={`workshopModal workshopModal-${size}`} onSubmit={onSubmit}>
         <div className={`workshopModalHead workshopModalHead-${headerTone}`}>
           <h2>{title}</h2>
-          <button type="button" className="iconButton iconButton-ghost" onClick={onClose} disabled={busy}>×</button>
+          <div className="workshopModalHeadActions">
+            {headerActions}
+            <button type="button" className="iconButton iconButton-ghost" onClick={onClose} disabled={busy}>×</button>
+          </div>
         </div>
         <div className="workshopModalBody">
           {children}
