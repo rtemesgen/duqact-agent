@@ -72,6 +72,14 @@ export function TransactionsDeskPage() {
   const invalidEmoney = nextEmoney < 0;
   const invalidCash = nextCash < 0;
   const invalidBalanceMessage = invalidEmoney ? 'Insufficient e-cash balance.' : invalidCash ? 'Insufficient cash at hand.' : '';
+  const accountMissing = !draft.accountId;
+  const accountUnavailable = Boolean(draft.accountId) && !selectedAccount;
+  const amountMissing = !draft.amount;
+  const submitBlockReason =
+    accountMissing ? 'Select an account before continuing.' :
+    accountUnavailable ? 'The selected account is not available right now. Re-select the account and try again.' :
+    amountMissing ? 'Enter a transaction amount before continuing.' :
+    invalidBalanceMessage;
 
   async function recordTransaction() {
     if (!draft.accountId || !draft.amount || !selectedAccount || saveLock.current) return;
@@ -190,10 +198,10 @@ export function TransactionsDeskPage() {
                 <input value={draft.clientId} onChange={(e) => updateDraft('clientId', e.target.value)} placeholder="Client ID" />
               </label>
             </div>
-            {invalidBalanceMessage && <p className="errorBanner">{invalidBalanceMessage}</p>}
+            {submitBlockReason && <p className="errorBanner">{submitBlockReason}</p>}
             <div className="workshopModalActions deskActions">
               <button type="button" className="secondaryButton" onClick={resetDraft} disabled={saving}>Cancel</button>
-              <button type="button" className="primaryButton" onClick={() => setConfirmOpen(true)} disabled={saving || !draft.amount || !selectedAccount || !draft.accountId || invalidEmoney || invalidCash}>
+              <button type="button" className="primaryButton" onClick={() => setConfirmOpen(true)} disabled={saving || Boolean(submitBlockReason)}>
                 Confirm
               </button>
             </div>
@@ -218,7 +226,7 @@ export function TransactionsDeskPage() {
             <div><span>Previous Cash at Hand</span><strong>{formatCurrency(previousCash)}</strong></div>
             <div><span>New Cash at Hand</span><strong>{invalidCash ? 'Unavailable' : formatCurrency(nextCash)}</strong></div>
           </div>
-          {invalidBalanceMessage && <p className="errorBanner">{invalidBalanceMessage}</p>}
+          {submitBlockReason && <p className="errorBanner">{submitBlockReason}</p>}
         </Modal>
       )}
 
@@ -236,8 +244,8 @@ export function TransactionsDeskPage() {
           submitLabel="Save"
           busy={saving}
           busyLabel="Saving..."
-          submitDisabled={!draft.amount || !selectedAccount || !draft.accountId || invalidEmoney || invalidCash}
-          errorMessage={error}
+          submitDisabled={Boolean(submitBlockReason)}
+          errorMessage={error || submitBlockReason}
           size="lg"
         >
           <div className="receiptPreview receiptPreview-modal">

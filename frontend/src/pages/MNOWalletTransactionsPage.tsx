@@ -99,8 +99,16 @@ export function MNOWalletTransactionsPage() {
   const nextCash = edit?.transactionType === 'DEPOSIT' ? previousCash + amount : isWithdrawal ? previousCash - amount : previousCash;
   const invalidEmoney = nextEmoney < 0;
   const invalidCash = nextCash < 0;
+  const accountMissing = !edit?.accountId;
+  const accountUnavailable = Boolean(edit?.accountId) && !currentAccount;
+  const amountMissing = !edit?.amount;
   const invalidBalanceMessage = invalidEmoney ? 'Insufficient e-cash balance.' : invalidCash ? 'Insufficient cash at hand.' : '';
-  const submitDisabled = !edit?.amount || !edit?.accountId || invalidEmoney || invalidCash;
+  const submitBlockReason =
+    accountMissing ? 'Select an account before continuing.' :
+    accountUnavailable ? 'The selected account is not available right now. Re-select the account and try again.' :
+    amountMissing ? 'Enter a transaction amount before continuing.' :
+    invalidBalanceMessage;
+  const submitDisabled = Boolean(submitBlockReason);
 
   useEffect(() => {
     setPage(1);
@@ -239,7 +247,7 @@ export function MNOWalletTransactionsPage() {
             <label>Transaction ID<input value={edit.transactionId} onChange={e => setEdit({ ...edit, transactionId: e.target.value })} placeholder="Transaction ID" /></label>
             <label>Client ID<input value={edit.clientId} onChange={e => setEdit({ ...edit, clientId: e.target.value })} placeholder="Client ID" /></label>
           </div>
-          {invalidBalanceMessage && <p className="errorBanner">{invalidBalanceMessage}</p>}
+          {submitBlockReason && <p className="errorBanner">{submitBlockReason}</p>}
         </Modal>
       )}
 
@@ -261,7 +269,7 @@ export function MNOWalletTransactionsPage() {
           busyLabel="Saving..."
           submitDisabled={submitDisabled}
           successMessage={modalSuccess}
-          errorMessage={modalError}
+          errorMessage={modalError || submitBlockReason}
           size="lg"
         >
           <div className="receiptPreview receiptPreview-modal">
@@ -317,7 +325,7 @@ export function MNOWalletTransactionsPage() {
             <div><span>Previous Cash at Hand</span><strong>{formatCurrency(previousCash)}</strong></div>
             <div><span>New Cash at Hand</span><strong>{invalidCash ? 'Unavailable' : formatCurrency(nextCash)}</strong></div>
           </div>
-          {invalidBalanceMessage && <p className="errorBanner">{invalidBalanceMessage}</p>}
+          {submitBlockReason && <p className="errorBanner">{submitBlockReason}</p>}
         </Modal>
       )}
 

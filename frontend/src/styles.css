@@ -166,12 +166,30 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 .metricCard {
   background: #151f31; border: 1px solid var(--border); border-radius: 14px; padding: .85rem .95rem; box-shadow: var(--shadow);
   min-width: 0;
+  display: grid;
+  gap: .35rem;
 }
-.metricHeader { display: flex; justify-content: space-between; align-items: center; gap: .55rem; color: var(--muted); margin-bottom: .45rem; }
-.metricHeader span { font-size: .84rem; line-height: 1.35; }
-.metricCard strong { display: block; font-size: clamp(1.1rem, 3vw, 1.45rem); line-height: 1.08; overflow-wrap: anywhere; }
+.metricPrimaryRow {
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: .85rem;
+}
+.metricLabel {
+  color: var(--muted);
+  font-size: .84rem;
+  line-height: 1.35;
+}
+.metricValueGroup {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .6rem;
+  min-width: 0;
+}
+.metricCard strong { display: block; font-size: clamp(1.1rem, 3vw, 1.45rem); line-height: 1.08; overflow-wrap: anywhere; text-align: right; }
 .metricCard small { display: block; margin-top: .32rem; color: var(--muted); font-size: .76rem; line-height: 1.35; }
-.metricIcon { color: #adb9cc; }
+.metricIcon { color: #adb9cc; display: inline-flex; align-items: center; flex: 0 0 auto; }
 .metric-gold { box-shadow: inset 0 0 0 1px rgba(243,189,8,.18), var(--shadow); }
 .metric-green { box-shadow: inset 0 0 0 1px rgba(25,179,107,.18), var(--shadow); }
 
@@ -187,9 +205,18 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 .panelGrid { display: grid; gap: 1rem; }
 .panelGrid-two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .miniStats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
-.miniStats div { background: rgba(255,255,255,.02); border: 1px solid var(--border-soft); border-radius: 12px; padding: .8rem; }
-.miniStats span { display: block; color: var(--muted); margin-bottom: .22rem; font-size: .76rem; }
-.miniStats strong { font-size: 1.05rem; line-height: 1.15; overflow-wrap: anywhere; }
+.miniStats div {
+  background: rgba(255,255,255,.02);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: .8rem;
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: .75rem;
+}
+.miniStats span { display: block; color: var(--muted); font-size: .76rem; line-height: 1.35; }
+.miniStats strong { font-size: 1.05rem; line-height: 1.15; overflow-wrap: anywhere; text-align: right; }
 .summaryStrip { display: grid; gap: .85rem; }
 .summaryStrip div { display: flex; gap: .8rem; align-items: flex-start; color: var(--muted); line-height: 1.5; }
 .heroGrid {
@@ -577,9 +604,18 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 .switchRow { display: flex; align-items: center; gap: .75rem; text-transform: none; letter-spacing: 0; }
 .switchRow input { width: auto; }
 .balancePreview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; padding: .2rem 0; }
-.balancePreview div { background: rgba(255,255,255,.03); border: 1px solid var(--border-soft); border-radius: 14px; padding: 1rem; }
-.balancePreview span { display: block; color: var(--muted); margin-bottom: .35rem; }
-.balancePreview strong { font-size: 1.2rem; }
+.balancePreview div {
+  background: rgba(255,255,255,.03);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: .8rem;
+}
+.balancePreview span { display: block; color: var(--muted); line-height: 1.35; }
+.balancePreview strong { font-size: 1.2rem; text-align: right; overflow-wrap: anywhere; }
 .detailGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1075,10 +1111,6 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
     font-size: 1rem;
   }
 
-  .metricHeader {
-    margin-bottom: .6rem;
-  }
-
   .metricCard strong {
     font-size: 1.18rem;
   }
@@ -1364,6 +1396,23 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 
   .metricCard {
     padding: .9rem .85rem;
+  }
+
+  .metricPrimaryRow,
+  .miniStats div,
+  .balancePreview div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .3rem;
+  }
+
+  .metricValueGroup {
+    justify-content: flex-start;
+  }
+
+  .metricCard strong,
+  .miniStats strong,
+  .balancePreview strong {
+    text-align: left;
   }
 
   .metricCard strong {
