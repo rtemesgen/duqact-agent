@@ -1,4 +1,4 @@
-import type { ApiConnection, ChangePasswordRequest, ChannelType, CurrencyProfile, DashboardStats, ExchangeRate, MnoAccount, MnoTransaction, MnoWallet, MobiAgentShop, Role, ServiceChannel, Session, ShopWorkerAssignment, User, UserProfile, UserSettings } from './types';
+import type { ApiConnection, ChangePasswordRequest, ChannelType, ChannelTypeWrite, CurrencyProfile, DashboardStats, ExchangeRate, MnoAccount, MnoAccountWrite, MnoTransaction, MobiAgentShop, Role, ServiceChannel, ServiceChannelWrite, Session, ShopWorkerAssignment, User, UserProfile, UserSettings } from './types';
 
 declare global {
   interface Window {
@@ -37,13 +37,10 @@ export const api = {
   users: () => request<User[]>('/users'),
   setRole: (id: number, role: Role) => request<User>(`/users/${id}/role`, { method: 'PATCH', body: body({ role }) }),
   accounts: () => request<MnoAccount[]>('/mno-accounts'),
-  saveAccount: (item: MnoAccount) => request<MnoAccount>(item.id ? `/mno-accounts/${item.id}` : '/mno-accounts', { method: item.id ? 'PUT' : 'POST', body: body(item) }),
+  saveAccount: (item: MnoAccountWrite) => request<MnoAccount>(item.id ? `/mno-accounts/${item.id}` : '/mno-accounts', { method: item.id ? 'PUT' : 'POST', body: body(item) }),
   deleteAccount: (id: number) => request<void>(`/mno-accounts/${id}`, { method: 'DELETE' }),
-  wallets: () => request<MnoWallet[]>('/mno-wallets'),
-  saveWallet: (item: MnoWallet) => request<MnoWallet>(item.id ? `/mno-wallets/${item.id}` : '/mno-wallets', { method: item.id ? 'PUT' : 'POST', body: body(item) }),
-  deleteWallet: (id: number) => request<void>(`/mno-wallets/${id}`, { method: 'DELETE' }),
   transactions: () => request<MnoTransaction[]>('/mno-transactions'),
-  recordTransaction: (item: { accountId: number; transactionType: string; amount: number; clientPhone: string; clientId?: string; clientName?: string }) => request<MnoTransaction>('/mno-transactions', { method: 'POST', body: body(item) }),
+  recordTransaction: (item: { accountId: number; transactionType: string; amount: number; clientPhone: string; clientId?: string; transactionId?: string }) => request<MnoTransaction>('/mno-transactions', { method: 'POST', body: body(item) }),
   rates: () => request<ExchangeRate[]>('/exchange-rates'),
   saveRate: (item: ExchangeRate) => request<ExchangeRate>(item.id ? `/exchange-rates/${item.id}` : '/exchange-rates', { method: item.id ? 'PUT' : 'POST', body: body(item) }),
   deleteRate: (id: number) => request<void>(`/exchange-rates/${id}`, { method: 'DELETE' }),
@@ -52,10 +49,10 @@ export const api = {
   deleteCurrencyProfile: (id: number) => request<void>(`/exchange-rates/profiles/${id}`, { method: 'DELETE' }),
   dashboard: () => request<DashboardStats>('/dashboard/mobi-agent'),
   channelTypes: () => request<ChannelType[]>('/channels/types'),
-  saveChannelType: (item: ChannelType) => request<ChannelType>(item.id ? `/channels/types/${item.id}` : '/channels/types', { method: item.id ? 'PUT' : 'POST', body: body(item) }),
+  saveChannelType: (item: ChannelTypeWrite) => request<ChannelType>(item.id ? `/channels/types/${item.id}` : '/channels/types', { method: item.id ? 'PUT' : 'POST', body: body(item) }),
   deleteChannelType: (id: number) => request<void>(`/channels/types/${id}`, { method: 'DELETE' }),
   serviceChannels: () => request<ServiceChannel[]>('/channels/service-channels'),
-  saveServiceChannel: (item: ServiceChannel) => request<ServiceChannel>(item.id ? `/channels/service-channels/${item.id}` : '/channels/service-channels', { method: item.id ? 'PUT' : 'POST', body: body(item) }),
+  saveServiceChannel: (item: ServiceChannelWrite) => request<ServiceChannel>(item.id ? `/channels/service-channels/${item.id}` : '/channels/service-channels', { method: item.id ? 'PUT' : 'POST', body: body(item) }),
   deleteServiceChannel: (id: number) => request<void>(`/channels/service-channels/${id}`, { method: 'DELETE' }),
   apiConnections: () => request<ApiConnection[]>('/api-connections'),
   saveApiConnection: (item: ApiConnection) => request<ApiConnection>(item.id ? `/api-connections/${item.id}` : '/api-connections', { method: item.id ? 'PUT' : 'POST', body: body(item) }),

@@ -4,16 +4,20 @@ import { api } from '../api/client';
 import type { DashboardStats, MnoAccount, MnoTransaction, TransactionType } from '../api/types';
 import { DashboardKPICard } from '../components/DashboardKPICard';
 import { Modal } from '../components/Modal';
-import { formatCurrency, formatDateTime, transactionLabel } from '../lib/format';
+import { formatCurrency, formatDateTime, generateTransactionId, transactionLabel } from '../lib/format';
 
-const blank = { accountId: 0, transactionType: 'DEPOSIT' as TransactionType, amount: 0, clientPhone: '', clientId: '' };
+function createBlank(accountId = 0) {
+  return { accountId, transactionType: 'DEPOSIT' as TransactionType, amount: 0, clientPhone: '', transactionId: generateTransactionId(), clientId: '' };
+}
 const PAGE_SIZE = 8;
+type TransactionModalStep = 'closed' | 'form' | 'confirm';
 
 export function MNOWalletTransactionsPage() {
   const [accounts, setAccounts] = useState<MnoAccount[]>([]);
   const [items, setItems] = useState<MnoTransaction[]>([]);
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [edit, setEdit] = useState<typeof blank | null>(null);
+  const [edit, setEdit] = useState<ReturnType<typeof createBlank> | null>(null);
+  const [modalStep, setModalStep] = useState<TransactionModalStep>('closed');
   const [balancesOpen, setBalancesOpen] = useState(false);
   const [selected, setSelected] = useState<MnoTransaction | null>(null);
   const [message, setMessage] = useState('');
@@ -64,6 +68,7 @@ export function MNOWalletTransactionsPage() {
       setModalSuccess(successText);
       setMessage(successText);
       window.setTimeout(() => {
+        setModalStep('closed');
         setEdit(null);
         setBalancesOpen(false);
         setModalSuccess('');
@@ -78,7 +83,7 @@ export function MNOWalletTransactionsPage() {
   }
 
   const filtered = useMemo(() => items.filter(item => {
-    const haystack = `${item.accountName} ${item.agentNumber} ${item.clientPhone} ${item.clientId ?? item.clientName ?? ''} ${item.transactionType}`.toLowerCase();
+    const haystack = `${item.accountName} ${item.agentNumber} ${item.clientPhone} ${item.transactionId ?? ''} ${item.clientId ?? item.clientName ?? ''} ${item.transactionType}`.toLowerCase();
     return haystack.includes(search.toLowerCase());
   }), [items, search]);
 
@@ -122,7 +127,7 @@ export function MNOWalletTransactionsPage() {
       <section className="surfaceCard">
         <div className="toolbarRow">
           <label className="searchField"><Search size={16} /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search transactions..." /></label>
-          <button className="primaryButton" onClick={() => { setBalancesOpen(false); setModalError(''); setModalSuccess(''); setEdit({ ...blank, accountId: accounts[0]?.id ?? 0 }); }}><Plus size={18} />Record Transaction</button>
+          <button className="primaryButton" onClick={() => { setBalancesOpen(false); setModalStep('form'); setModalError(''); setModalSuccess(''); setEdit(createBlank(accounts[0]?.id ?? 0)); }}><Plus size={18} />Record Transaction</button>
         </div>
 
         {loading ? (
@@ -198,23 +203,20 @@ export function MNOWalletTransactionsPage() {
         </div>
       </section>
 
-      {edit && (
+      {edit && modalStep === 'form' && !balancesOpen && (
         <Modal
           title="Record Transaction"
           onClose={() => {
             if (saving) return;
+            setModalStep('closed');
             setEdit(null);
             setBalancesOpen(false);
             setModalSuccess('');
             setModalError('');
           }}
-          onSubmit={e => { e.preventDefault(); void save(); }}
-          submitLabel="Save"
-          busy={saving}
-          busyLabel="Saving..."
+          onSubmit={e => { e.preventDefault(); setBalancesOpen(false); setModalStep('confirm'); }}
+          submitLabel="Confirm"
           submitDisabled={submitDisabled}
-          successMessage={modalSuccess}
-          errorMessage={modalError}
           size="lg"
           headerActions={(
             <button
@@ -234,13 +236,71 @@ export function MNOWalletTransactionsPage() {
             <label>Account<select value={edit.accountId} onChange={e => setEdit({ ...edit, accountId: Number(e.target.value) })}>{accounts.map(account => <option key={account.id} value={account.id}>{account.name} ({account.network})</option>)}</select></label>
             <label>Transaction Type<select value={edit.transactionType} onChange={e => setEdit({ ...edit, transactionType: e.target.value as TransactionType })}><option value="DEPOSIT">Deposit</option><option value="FLOAT_WITHDRAWAL">Withdrawal</option><option value="FLOAT_TOP_UP">Float Top-up</option></select></label>
             <label>Amount (UGX)<input type="number" value={edit.amount} onChange={e => setEdit({ ...edit, amount: Math.max(0, Number(e.target.value)) })} min={0} /></label>
+            <label>Transaction ID<input value={edit.transactionId} onChange={e => setEdit({ ...edit, transactionId: e.target.value })} placeholder="Transaction ID" /></label>
             <label>Client ID<input value={edit.clientId} onChange={e => setEdit({ ...edit, clientId: e.target.value })} placeholder="Client ID" /></label>
           </div>
           {invalidBalanceMessage && <p className="errorBanner">{invalidBalanceMessage}</p>}
         </Modal>
       )}
 
-      {edit && balancesOpen && (
+      {edit && modalStep === 'confirm' && (
+        <Modal
+          title="Confirm Transaction Entry"
+          onClose={() => {
+            if (saving) return;
+            setModalStep('form');
+            setModalSuccess('');
+            setModalError('');
+          }}
+          onSubmit={e => {
+            e.preventDefault();
+            void save();
+          }}
+          submitLabel="Save"
+          busy={saving}
+          busyLabel="Saving..."
+          submitDisabled={submitDisabled}
+          successMessage={modalSuccess}
+          errorMessage={modalError}
+          size="lg"
+        >
+          <div className="receiptPreview receiptPreview-modal">
+            <div className="receiptCard">
+              <div className="receiptHead">
+                <span>Receipt Preview</span>
+                <strong>MOBI RECEIPT</strong>
+              </div>
+              <div className="receiptBody">
+                <div className="receiptSplit">
+                  <div>
+                    <span>Account</span>
+                    <strong>{currentAccount?.name ?? '--'}</strong>
+                    <small>{currentAccount?.network || '--'}</small>
+                  </div>
+                  <div className="receiptType">
+                    <span>Type</span>
+                    <strong className={isWithdrawal ? 'tablePositive' : 'tableNegative'}>{transactionLabel(edit.transactionType)}</strong>
+                  </div>
+                </div>
+                <div className="receiptRows">
+                  <div><span>Transaction ID</span><strong>{edit.transactionId || 'N/A'}</strong></div>
+                  <div><span>Client ID</span><strong>{edit.clientId || 'N/A'}</strong></div>
+                  <div><span>Phone</span><strong>{edit.clientPhone || 'N/A'}</strong></div>
+                  <div><span>Amount</span><strong className="accentText">{formatCurrency(amount)}</strong></div>
+                  <div><span>E-cash After</span><strong>{invalidEmoney ? 'Unavailable' : formatCurrency(nextEmoney)}</strong></div>
+                  <div><span>Cash at Hand After</span><strong>{invalidCash ? 'Unavailable' : formatCurrency(nextCash)}</strong></div>
+                </div>
+                <div className="receiptSignature">
+                  <div />
+                  <p>Digital Signature Validated</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {edit && modalStep === 'form' && balancesOpen && (
         <Modal
           title="Balance Preview"
           onClose={() => setBalancesOpen(false)}
@@ -264,18 +324,19 @@ export function MNOWalletTransactionsPage() {
       {selected && (
         <Modal title="Transaction Details" onClose={() => setSelected(null)} onSubmit={e => { e.preventDefault(); setSelected(null); }} submitLabel="Close" size="lg">
           <div className="detailGrid">
-            <div className="detailCard"><span>Date</span><strong>{formatDateTime(selected.date)}</strong></div>
-            <div className="detailCard"><span>Account</span><strong>{selected.accountName || selected.mnoWalletName || '--'}</strong></div>
-            <div className="detailCard"><span>Agent ID</span><strong>{selected.agentNumber || '--'}</strong></div>
-            <div className="detailCard"><span>Client Phone</span><strong>{selected.clientPhone || '--'}</strong></div>
-            <div className="detailCard"><span>Client ID</span><strong>{selected.clientId || selected.clientName || '--'}</strong></div>
-            <div className="detailCard"><span>Status</span><strong>{selected.status}</strong></div>
-            <div className="detailCard"><span>Transaction Type</span><strong>{transactionLabel(selected.transactionType)}</strong></div>
-            <div className="detailCard"><span>Amount</span><strong className={selected.transactionType === 'WITHDRAW' || selected.transactionType === 'FLOAT_WITHDRAWAL' ? 'tablePositive' : 'accentText'}>{formatCurrency(selected.amount)}</strong></div>
-            <div className="detailCard"><span>Previous E-cash</span><strong>{formatCurrency(selected.previousEmoney ?? selected.previousBalance)}</strong></div>
-            <div className="detailCard"><span>New E-cash</span><strong>{formatCurrency(selected.newEmoney ?? selected.balance)}</strong></div>
-            <div className="detailCard"><span>Previous Cash at Hand</span><strong>{formatCurrency(selected.previousCashAtHand)}</strong></div>
-            <div className="detailCard"><span>New Cash at Hand</span><strong>{formatCurrency(selected.newCashAtHand)}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Date</span><strong>{formatDateTime(selected.date)}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Account</span><strong>{selected.accountName || selected.mnoWalletName || '--'}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Agent ID</span><strong>{selected.agentNumber || '--'}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Client Phone</span><strong>{selected.clientPhone || '--'}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Transaction ID</span><strong>{selected.transactionId || '--'}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Client ID</span><strong>{selected.clientId || selected.clientName || '--'}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Status</span><strong>{selected.status}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Transaction Type</span><strong>{transactionLabel(selected.transactionType)}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Amount</span><strong className={selected.transactionType === 'WITHDRAW' || selected.transactionType === 'FLOAT_WITHDRAWAL' ? 'tablePositive' : 'accentText'}>{formatCurrency(selected.amount)}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Previous E-cash</span><strong>{formatCurrency(selected.previousEmoney ?? selected.previousBalance)}</strong></div>
+            <div className="detailCard detailCard-inline"><span>New E-cash</span><strong>{formatCurrency(selected.newEmoney ?? selected.balance)}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Previous Cash at Hand</span><strong>{formatCurrency(selected.previousCashAtHand)}</strong></div>
+            <div className="detailCard detailCard-inline"><span>New Cash at Hand</span><strong>{formatCurrency(selected.newCashAtHand)}</strong></div>
           </div>
         </Modal>
       )}

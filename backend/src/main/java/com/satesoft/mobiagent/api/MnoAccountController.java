@@ -13,28 +13,29 @@ import java.util.List;
 public class MnoAccountController {
     private final MnoAccountRepository accounts; private final UserRepository users; private final ServiceChannelRepository serviceChannels; private final ChannelTypeRepository channelTypes;
     public MnoAccountController(MnoAccountRepository accounts, UserRepository users, ServiceChannelRepository serviceChannels, ChannelTypeRepository channelTypes) { this.accounts = accounts; this.users = users; this.serviceChannels = serviceChannels; this.channelTypes = channelTypes; }
-    @GetMapping public List<MnoAccount> list(Authentication auth) { return accounts.findByUserId(currentUser(auth).getId()); }
-    @PostMapping public MnoAccount create(@RequestBody MnoAccount account, Authentication auth) { Long userId = currentUser(auth).getId(); account.setUserId(userId); hydrateFromServiceChannel(account, userId, true); validate(account); return accounts.save(account); }
-    @PutMapping("/{id}") public MnoAccount update(@PathVariable Long id, @RequestBody MnoAccount input, Authentication auth) { Long userId = currentUser(auth).getId(); MnoAccount a = owned(id, auth); copy(input, a); hydrateFromServiceChannel(a, userId, false); validate(a); return accounts.save(a); }
+    @GetMapping public List<MnoAccountDto> list(Authentication auth) { return accounts.findByUserId(currentUser(auth).getId()).stream().map(MnoAccountDto::from).toList(); }
+    @PostMapping public MnoAccountDto create(@RequestBody MnoAccountRequest request, Authentication auth) { Long userId = currentUser(auth).getId(); MnoAccount account = new MnoAccount(); account.setUserId(userId); copy(request, account); hydrateFromServiceChannel(account, userId, true); validate(account); return MnoAccountDto.from(accounts.save(account)); }
+    @PutMapping("/{id}") public MnoAccountDto update(@PathVariable Long id, @RequestBody MnoAccountRequest request, Authentication auth) { Long userId = currentUser(auth).getId(); MnoAccount a = owned(id, auth); copy(request, a); hydrateFromServiceChannel(a, userId, false); validate(a); return MnoAccountDto.from(accounts.save(a)); }
     @DeleteMapping("/{id}") public void delete(@PathVariable Long id, Authentication auth) { accounts.delete(owned(id, auth)); }
-    private void copy(MnoAccount in, MnoAccount a) {
-        a.setServiceChannelId(in.getServiceChannelId());
-        a.setName(in.getName());
-        a.setCountry(in.getCountry());
-        a.setMobileNumber(in.getMobileNumber());
-        a.setAgentId(in.getAgentId());
-        a.setEmoneyAmount(nz(in.getEmoneyAmount()));
-        a.setNetwork(in.getNetwork());
-        a.setCashAtHand(nz(in.getCashAtHand()));
-        a.setAccountType(in.getAccountType());
-        a.setCurrency(in.getCurrency());
-        a.setOpeningBalance(nz(in.getOpeningBalance()));
-        a.setRemarks(in.getRemarks());
+    private void copy(MnoAccountRequest in, MnoAccount a) {
+        a.setServiceChannelId(in.serviceChannelId());
+        a.setName(in.name());
+        a.setCountry(in.country());
+        a.setMobileNumber(in.mobileNumber());
+        a.setAgentId(in.agentId());
+        a.setEmoneyAmount(nz(in.emoneyAmount()));
+        a.setNetwork(in.network());
+        a.setCashAtHand(nz(in.cashAtHand()));
+        a.setAccountType(in.accountType());
+        a.setCurrency(in.currency());
+        a.setOpeningBalance(nz(in.openingBalance()));
+        a.setRemarks(in.remarks());
     }
     private void hydrateFromServiceChannel(MnoAccount account, Long userId, boolean requireSelection) {
         ServiceChannel service = resolveServiceChannel(account, userId);
         if (service == null) {
             if (requireSelection || account.getServiceChannelId() != null) throw new IllegalArgumentException("Service channel is required");
+            if (blank(account.getNetwork()) || blank(account.getCountry()) || blank(account.getAccountType())) throw new IllegalArgumentException("Network, country, and account type are required when no service channel is selected");
             return;
         }
         account.setServiceChannelId(service.getId());
@@ -68,4 +69,10 @@ public class MnoAccountController {
     }
     private MnoAccount owned(Long id, Authentication auth) { Long userId = currentUser(auth).getId(); MnoAccount a = accounts.findById(id).orElseThrow(); if (!a.getUserId().equals(userId)) throw new IllegalArgumentException("Not found"); return a; }
     private User currentUser(Authentication auth) { return users.findByEmail(auth.getName()).orElseThrow(); }
+    public record MnoAccountRequest(Long serviceChannelId, String name, String country, String mobileNumber, String agentId, BigDecimal emoneyAmount, String network, BigDecimal cashAtHand, String accountType, String currency, BigDecimal openingBalance, String remarks) {}
+    public record MnoAccountDto(Long id, Long userId, Long serviceChannelId, String name, String country, String mobileNumber, String agentId, BigDecimal emoneyAmount, String network, BigDecimal cashAtHand, String accountType, String currency, BigDecimal openingBalance, String remarks) {
+        static MnoAccountDto from(MnoAccount item) {
+            return new MnoAccountDto(item.getId(), item.getUserId(), item.getServiceChannelId(), item.getName(), item.getCountry(), item.getMobileNumber(), item.getAgentId(), item.getEmoneyAmount(), item.getNetwork(), item.getCashAtHand(), item.getAccountType(), item.getCurrency(), item.getOpeningBalance(), item.getRemarks());
+        }
+    }
 }

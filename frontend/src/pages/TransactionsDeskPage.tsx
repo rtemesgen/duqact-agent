@@ -1,25 +1,29 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Eye, History, Search } from 'lucide-react';
+import { Eye, History } from 'lucide-react';
 import { api } from '../api/client';
 import type { MnoAccount, TransactionType } from '../api/types';
 import { Modal } from '../components/Modal';
-import { formatCurrency, transactionLabel } from '../lib/format';
+import { formatCurrency, generateTransactionId, transactionLabel } from '../lib/format';
 
 type Draft = {
   accountId: number;
   transactionType: TransactionType;
   amount: string;
   clientPhone: string;
+  transactionId: string;
   clientId: string;
 };
 
-const blankDraft: Draft = {
-  accountId: 0,
-  transactionType: 'DEPOSIT',
-  amount: '',
-  clientPhone: '',
-  clientId: '',
-};
+function createBlankDraft(accountId = 0): Draft {
+  return {
+    accountId,
+    transactionType: 'DEPOSIT',
+    amount: '',
+    clientPhone: '',
+    transactionId: generateTransactionId(),
+    clientId: '',
+  };
+}
 
 function isCashAccount(account: MnoAccount) {
   return (account.accountType || '').trim().toLowerCase() === 'cash';
@@ -27,8 +31,9 @@ function isCashAccount(account: MnoAccount) {
 
 export function TransactionsDeskPage() {
   const [accounts, setAccounts] = useState<MnoAccount[]>([]);
-  const [draft, setDraft] = useState<Draft>(blankDraft);
+  const [draft, setDraft] = useState<Draft>(() => createBlankDraft());
   const [balancesOpen, setBalancesOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -41,10 +46,7 @@ export function TransactionsDeskPage() {
     api.accounts().then((accountData) => {
       setAccounts(accountData);
       const initialAccount = accountData.find((account) => !isCashAccount(account));
-      setDraft((current) => ({
-        ...current,
-        accountId: initialAccount?.id ?? 0,
-      }));
+      setDraft(createBlankDraft(initialAccount?.id ?? 0));
     }).catch((loadError) => {
       setError(loadError instanceof Error ? loadError.message : 'Accounts could not be loaded.');
     }).finally(() => {
@@ -84,20 +86,15 @@ export function TransactionsDeskPage() {
         amount,
         clientPhone: draft.clientPhone,
         clientId: draft.clientId,
-        clientName: draft.clientId,
+        transactionId: draft.transactionId,
       });
       setMessage('Transaction recorded.');
       const refreshedAccounts = await api.accounts();
       setAccounts(refreshedAccounts);
       const refreshedAvailableAccounts = refreshedAccounts.filter((account) => !isCashAccount(account));
-      setDraft((current) => ({
-        ...current,
-        accountId: current.accountId || (refreshedAvailableAccounts[0]?.id ?? 0),
-        amount: '',
-        clientPhone: '',
-        clientId: '',
-      }));
+      setDraft(createBlankDraft(draft.accountId || (refreshedAvailableAccounts[0]?.id ?? 0)));
       setBalancesOpen(false);
+      setConfirmOpen(false);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Transaction failed.');
     } finally {
@@ -111,13 +108,9 @@ export function TransactionsDeskPage() {
   }
 
   function resetDraft() {
-    setDraft((current) => ({
-      ...current,
-      amount: '',
-      clientPhone: '',
-      clientId: '',
-    }));
+    setDraft((current) => createBlankDraft(current.accountId));
     setBalancesOpen(false);
+    setConfirmOpen(false);
   }
 
   return (
@@ -126,7 +119,7 @@ export function TransactionsDeskPage() {
         <div>
           <p className="eyebrow">Operations</p>
           <h1>Transactions Desk</h1>
-          <p className="pageLead">Record account-based deposits and withdrawals with live e-cash and cash-at-hand preview.</p>
+          <p className="pageLead">Record account-based deposits and withdrawals with a receipt confirmation before saving.</p>
         </div>
       </div>
 
@@ -188,7 +181,11 @@ export function TransactionsDeskPage() {
                 Amount ({selectedAccount?.currency || 'UGX'})
                 <input type="number" value={draft.amount} onChange={(e) => updateDraft('amount', e.target.value)} placeholder="0.00" min={0} />
               </label>
-              <label className="detailCard-wide">
+              <label>
+                Transaction ID
+                <input value={draft.transactionId} onChange={(e) => updateDraft('transactionId', e.target.value)} placeholder="Transaction ID" />
+              </label>
+              <label>
                 Client ID
                 <input value={draft.clientId} onChange={(e) => updateDraft('clientId', e.target.value)} placeholder="Client ID" />
               </label>
@@ -196,55 +193,9 @@ export function TransactionsDeskPage() {
             {invalidBalanceMessage && <p className="errorBanner">{invalidBalanceMessage}</p>}
             <div className="workshopModalActions deskActions">
               <button type="button" className="secondaryButton" onClick={resetDraft} disabled={saving}>Cancel</button>
-              <button type="button" className="primaryButton" onClick={recordTransaction} disabled={saving || !draft.amount || !selectedAccount || !draft.accountId || invalidEmoney || invalidCash}>
-                {saving ? <span className="buttonBusy"><span className="buttonSpinner" aria-hidden="true" />Saving...</span> : 'Save'}
+              <button type="button" className="primaryButton" onClick={() => setConfirmOpen(true)} disabled={saving || !draft.amount || !selectedAccount || !draft.accountId || invalidEmoney || invalidCash}>
+                Confirm
               </button>
-            </div>
-          </section>
-
-          <section className="surfaceCard deskPanel">
-            <div className="surfaceHead">
-              <h2>Transaction Preview</h2>
-              <span className="deskHint">Live receipt</span>
-            </div>
-            <div className="receiptPreview">
-              {!draft.amount && !draft.clientPhone && !draft.clientId ? (
-                <div className="receiptEmpty">
-                  <Search size={28} />
-                  <p>Start entering details to see a preview.</p>
-                </div>
-              ) : (
-                <div className="receiptCard">
-                  <div className="receiptHead">
-                    <span>Receipt Preview</span>
-                    <strong>MOBI RECEIPT</strong>
-                  </div>
-                  <div className="receiptBody">
-                    <div className="receiptSplit">
-                      <div>
-                        <span>Account</span>
-                        <strong>{selectedAccount?.name ?? '--'}</strong>
-                        <small>{selectedAccount?.network || '--'}</small>
-                      </div>
-                      <div className="receiptType">
-                        <span>Type</span>
-                        <strong className={positive ? 'tablePositive' : 'tableNegative'}>{transactionLabel(draft.transactionType)}</strong>
-                      </div>
-                    </div>
-                    <div className="receiptRows">
-                      <div><span>Client ID</span><strong>{draft.clientId || 'N/A'}</strong></div>
-                      <div><span>Phone</span><strong>{draft.clientPhone || 'N/A'}</strong></div>
-                      <div><span>Amount</span><strong className="accentText">{formatCurrency(amount)}</strong></div>
-                      <div><span>E-cash After</span><strong>{invalidEmoney ? 'Unavailable' : formatCurrency(nextEmoney)}</strong></div>
-                      <div><span>Cash at Hand After</span><strong>{invalidCash ? 'Unavailable' : formatCurrency(nextCash)}</strong></div>
-                    </div>
-                    <div className="receiptSignature">
-                      <div />
-                      <p>Digital Signature Validated</p>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </section>
         </div>
@@ -268,6 +219,60 @@ export function TransactionsDeskPage() {
             <div><span>New Cash at Hand</span><strong>{invalidCash ? 'Unavailable' : formatCurrency(nextCash)}</strong></div>
           </div>
           {invalidBalanceMessage && <p className="errorBanner">{invalidBalanceMessage}</p>}
+        </Modal>
+      )}
+
+      {confirmOpen && (
+        <Modal
+          title="Confirm Transaction Entry"
+          onClose={() => {
+            if (saving) return;
+            setConfirmOpen(false);
+          }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            void recordTransaction();
+          }}
+          submitLabel="Save"
+          busy={saving}
+          busyLabel="Saving..."
+          submitDisabled={!draft.amount || !selectedAccount || !draft.accountId || invalidEmoney || invalidCash}
+          errorMessage={error}
+          size="lg"
+        >
+          <div className="receiptPreview receiptPreview-modal">
+            <div className="receiptCard">
+              <div className="receiptHead">
+                <span>Receipt Preview</span>
+                <strong>MOBI RECEIPT</strong>
+              </div>
+              <div className="receiptBody">
+                <div className="receiptSplit">
+                  <div>
+                    <span>Account</span>
+                    <strong>{selectedAccount?.name ?? '--'}</strong>
+                    <small>{selectedAccount?.network || '--'}</small>
+                  </div>
+                  <div className="receiptType">
+                    <span>Type</span>
+                    <strong className={positive ? 'tablePositive' : 'tableNegative'}>{transactionLabel(draft.transactionType)}</strong>
+                  </div>
+                </div>
+                <div className="receiptRows">
+                  <div><span>Transaction ID</span><strong>{draft.transactionId || 'N/A'}</strong></div>
+                  <div><span>Client ID</span><strong>{draft.clientId || 'N/A'}</strong></div>
+                  <div><span>Phone</span><strong>{draft.clientPhone || 'N/A'}</strong></div>
+                  <div><span>Amount</span><strong className="accentText">{formatCurrency(amount)}</strong></div>
+                  <div><span>E-cash After</span><strong>{invalidEmoney ? 'Unavailable' : formatCurrency(nextEmoney)}</strong></div>
+                  <div><span>Cash at Hand After</span><strong>{invalidCash ? 'Unavailable' : formatCurrency(nextCash)}</strong></div>
+                </div>
+                <div className="receiptSignature">
+                  <div />
+                  <p>Digital Signature Validated</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </Modal>
       )}
     </section>

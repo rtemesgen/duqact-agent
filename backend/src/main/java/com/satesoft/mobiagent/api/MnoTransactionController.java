@@ -25,7 +25,7 @@ class MnoTransactionController {
     private User currentUser(Authentication auth) { return users.findByEmail(auth.getName()).orElseThrow(); }
 }
 
-record TransactionRequest(Long accountId, TransactionType transactionType, BigDecimal amount, String clientPhone, String clientId, String clientName) {}
+record TransactionRequest(Long accountId, TransactionType transactionType, BigDecimal amount, String clientPhone, String clientId, String transactionId) {}
 
 @Service
 class TransactionService {
@@ -76,7 +76,8 @@ class TransactionService {
         tx.setPreviousEmoney(previousEmoney); tx.setNewEmoney(newEmoney); tx.setPreviousCashAtHand(previousCash); tx.setNewCashAtHand(newCash);
         tx.setPreviousBalance(previousEmoney); tx.setBalance(newEmoney);
         tx.setDate(Instant.now()); tx.setClientPhone(request.clientPhone()); tx.setClientId(request.clientId());
-        tx.setClientName(request.clientName() != null && !request.clientName().isBlank() ? request.clientName() : request.clientId());
+        tx.setClientName(request.clientId());
+        tx.setTransactionId(request.transactionId());
         tx.setStatus(TransactionStatus.PENDING);
         tx = transactions.save(tx);
         tx.setStatus(TransactionStatus.PROCESSING);
@@ -117,7 +118,8 @@ class TransactionService {
                 request.transactionType() + "|" +
                 request.amount().stripTrailingZeros().toPlainString() + "|" +
                 normalized(request.clientPhone()) + "|" +
-                normalized(request.clientId());
+                normalized(request.clientId()) + "|" +
+                normalized(request.transactionId());
     }
     private String normalized(String value) {
         return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);

@@ -36,7 +36,7 @@ export function Modal({
           <h2>{title}</h2>
           <div className="workshopModalHeadActions">
             {headerActions}
-            <button type="button" className="iconButton iconButton-ghost" onClick={onClose} disabled={busy}>×</button>
+            <button type="button" className="iconButton iconButton-ghost" onClick={onClose} disabled={busy} aria-label="Close modal">X</button>
           </div>
         </div>
         <div className="workshopModalBody">

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Eye, Pencil, Plus, Search, Trash2, TriangleAlert } from 'lucide-react';
 import { api } from '../api/client';
-import type { DashboardStats, MnoAccount, ServiceChannel } from '../api/types';
+import type { DashboardStats, MnoAccount, MnoAccountWrite, ServiceChannel } from '../api/types';
 import { DashboardKPICard } from '../components/DashboardKPICard';
 import { Modal } from '../components/Modal';
 import { formatCurrency } from '../lib/format';
@@ -108,15 +108,20 @@ export function MobiAgentSettingsPage() {
     try {
       const service = selectedServiceChannel(edit, serviceChannels);
       if (!service) throw new Error('Please select a service channel.');
-      const { serviceChannelId: _serviceChannelId, ...rest } = edit;
-      const payload: MnoAccount = {
-        ...rest,
+      const payload: MnoAccountWrite = {
+        id: edit.id,
+        serviceChannelId: edit.serviceChannelId,
+        name: edit.name,
+        mobileNumber: edit.mobileNumber,
+        agentId: edit.agentId,
         country: service.country,
         network: service.channelName,
         accountType: service.channelTypeName || edit.accountType || '',
         emoneyAmount: Math.max(0, Number(edit.emoneyAmount || 0)),
         cashAtHand: edit.id ? Math.max(0, Number(edit.cashAtHand || 0)) : 0,
+        currency: edit.currency ?? 'UGX',
         openingBalance: edit.id ? Math.max(0, Number(edit.openingBalance ?? edit.emoneyAmount ?? 0)) : Math.max(0, Number(edit.emoneyAmount || 0)),
+        remarks: edit.remarks,
       };
       await api.saveAccount(payload);
       await load();
@@ -399,16 +404,16 @@ export function MobiAgentSettingsPage() {
       {selected && (
         <Modal title="Account Details" onClose={() => setSelected(null)} onSubmit={(e) => { e.preventDefault(); setSelected(null); }} submitLabel="Close" size="lg">
           <div className="detailGrid">
-            <div className="detailCard"><span>Account</span><strong>{selected.name}</strong></div>
-            <div className="detailCard"><span>Service Channel</span><strong>{selected.network || '--'}</strong></div>
-            <div className="detailCard"><span>Channel Type</span><strong>{selected.accountType || '--'}</strong></div>
-            <div className="detailCard"><span>Country</span><strong>{selected.country || '--'}</strong></div>
-            <div className="detailCard"><span>Agent ID</span><strong>{selected.agentId || '--'}</strong></div>
-            <div className="detailCard"><span>Account No.</span><strong>{selected.mobileNumber || '--'}</strong></div>
-            <div className="detailCard"><span>Currency</span><strong>{selected.currency || 'UGX'}</strong></div>
-            <div className="detailCard"><span>Balance</span><strong>{formatCurrency(selected.emoneyAmount)}</strong></div>
-            <div className="detailCard"><span>Cash At Hand</span><strong>{formatCurrency(selected.cashAtHand)}</strong></div>
-            <div className="detailCard detailCard-wide"><span>Remarks</span><strong>{selected.remarks || '--'}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Account</span><strong>{selected.name}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Service Channel</span><strong>{selected.network || '--'}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Channel Type</span><strong>{selected.accountType || '--'}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Country</span><strong>{selected.country || '--'}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Agent ID</span><strong>{selected.agentId || '--'}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Account No.</span><strong>{selected.mobileNumber || '--'}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Currency</span><strong>{selected.currency || 'UGX'}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Balance</span><strong>{formatCurrency(selected.emoneyAmount)}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Cash At Hand</span><strong>{formatCurrency(selected.cashAtHand)}</strong></div>
+            <div className="detailCard detailCard-inline detailCard-wide"><span>Remarks</span><strong>{selected.remarks || '--'}</strong></div>
           </div>
         </Modal>
       )}

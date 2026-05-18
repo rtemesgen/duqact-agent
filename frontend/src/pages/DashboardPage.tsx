@@ -68,7 +68,7 @@ export function DashboardPage() {
           <div className="surfaceHead"><h2>Operations Footprint</h2></div>
           <div className="miniStats">
             <div><span>Accounts</span><strong>{stats?.accountCount ?? 0}</strong></div>
-            <div><span>Legacy Linked Records</span><strong>{stats?.walletCount ?? 0}</strong></div>
+            <div><span>Transaction Records</span><strong>{stats?.transactionCount ?? 0}</strong></div>
             <div><span>Channel Types</span><strong>{stats?.channelTypeCount ?? 0}</strong></div>
             <div><span>Service Channels</span><strong>{stats?.serviceChannelCount ?? 0}</strong></div>
           </div>
@@ -78,7 +78,7 @@ export function DashboardPage() {
           <div className="miniStats">
             <div><span>Total E-money</span><strong>{formatCurrency(stats?.totalEmoney)}</strong></div>
             <div><span>Cash At Hand</span><strong>{formatCurrency(stats?.totalCashAtHand)}</strong></div>
-            <div><span>Compatibility Mirror</span><strong>{formatCurrency(stats?.totalWalletBalance)}</strong></div>
+            <div><span>Total Liquidity</span><strong>{formatCurrency((stats?.totalEmoney ?? 0) + (stats?.totalCashAtHand ?? 0))}</strong></div>
             <div><span>Net E-cash Change</span><strong>{formatCurrency(stats?.netFloatChange)}</strong></div>
           </div>
         </section>
@@ -89,7 +89,7 @@ export function DashboardPage() {
         <div className="summaryStrip">
           <div><BriefcaseBusiness size={18} /><span>Transaction totals now follow account-ledger balances for e-cash and cash at hand.</span></div>
           <div><Wallet size={18} /><span>Deposit reduces e-cash and increases cash at hand, while withdraw does the reverse.</span></div>
-          <div><Banknote size={18} /><span>Channel Management includes Cash as a channel type with Cash at Hand as a service channel.</span></div>
+          <div><Banknote size={18} /><span>Channel Management supports the service-channel structure that powers account setup and transaction routing.</span></div>
         </div>
       </section>
     </section>

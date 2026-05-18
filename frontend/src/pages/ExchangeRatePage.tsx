@@ -409,10 +409,10 @@ export function ExchangeRatePage() {
       {viewRate && (
         <Modal title="Exchange Rate Details" onClose={() => setViewRate(null)} onSubmit={(e) => { e.preventDefault(); setViewRate(null); }} submitLabel="Close">
           <div className="detailGrid">
-            <div className="detailCard"><span>From Currency</span><strong>{viewRate.fromCurrency}</strong></div>
-            <div className="detailCard"><span>To Currency</span><strong>{viewRate.toCurrency}</strong></div>
-            <div className="detailCard"><span>Rate</span><strong>{viewRate.rate}</strong></div>
-            <div className="detailCard"><span>Updated At</span><strong>{formatDateTime(viewRate.updatedAt ?? null)}</strong></div>
+            <div className="detailCard detailCard-inline"><span>From Currency</span><strong>{viewRate.fromCurrency}</strong></div>
+            <div className="detailCard detailCard-inline"><span>To Currency</span><strong>{viewRate.toCurrency}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Rate</span><strong>{viewRate.rate}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Updated At</span><strong>{formatDateTime(viewRate.updatedAt ?? null)}</strong></div>
           </div>
         </Modal>
       )}
@@ -458,12 +458,12 @@ export function ExchangeRatePage() {
       {viewProfile && (
         <Modal title="Currency Profile Details" onClose={() => setViewProfile(null)} onSubmit={(e) => { e.preventDefault(); setViewProfile(null); }} submitLabel="Close" size="lg">
           <div className="detailGrid">
-            <div className="detailCard"><span>Country</span><strong>{viewProfile.countryName}</strong></div>
-            <div className="detailCard"><span>Currency</span><strong>{viewProfile.currencyCode} - {viewProfile.currency}</strong></div>
-            <div className="detailCard"><span>Symbol</span><strong>{viewProfile.currencySymbol}</strong></div>
-            <div className="detailCard"><span>Decimals</span><strong>{viewProfile.decimalPlaces}</strong></div>
-            <div className="detailCard"><span>Rounding Mode</span><strong>{viewProfile.roundingCondition}</strong></div>
-            <div className="detailCard"><span>Denominations</span><strong>{viewProfile.denominations.length}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Country</span><strong>{viewProfile.countryName}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Currency</span><strong>{viewProfile.currencyCode} - {viewProfile.currency}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Symbol</span><strong>{viewProfile.currencySymbol}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Decimals</span><strong>{viewProfile.decimalPlaces}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Rounding Mode</span><strong>{viewProfile.roundingCondition}</strong></div>
+            <div className="detailCard detailCard-inline"><span>Denominations</span><strong>{viewProfile.denominations.length}</strong></div>
           </div>
         </Modal>
       )}

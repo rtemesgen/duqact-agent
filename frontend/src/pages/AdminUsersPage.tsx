@@ -208,19 +208,19 @@ export function AdminUsersPage() {
       {selected && (
         <Modal title="User Details" onClose={() => setSelected(null)} onSubmit={(e) => { e.preventDefault(); setSelected(null); }} submitLabel="Close">
           <div className="detailGrid">
-            <div className="detailCard">
+            <div className="detailCard detailCard-inline">
               <span>Name</span>
               <strong>{selected.name}</strong>
             </div>
-            <div className="detailCard">
+            <div className="detailCard detailCard-inline">
               <span>Email</span>
               <strong>{selected.email}</strong>
             </div>
-            <div className="detailCard">
+            <div className="detailCard detailCard-inline">
               <span>Role</span>
               <strong>{selected.role}</strong>
             </div>
-            <div className="detailCard">
+            <div className="detailCard detailCard-inline">
               <span>Status</span>
               <strong>ACTIVE</strong>
             </div>
@@ -240,11 +240,11 @@ export function AdminUsersPage() {
           headerTone="accent"
         >
           <div className="detailGrid">
-            <div className="detailCard">
+            <div className="detailCard detailCard-inline">
               <span>User</span>
               <strong>{editing.name}</strong>
             </div>
-            <div className="detailCard">
+            <div className="detailCard detailCard-inline">
               <span>Email</span>
               <strong>{editing.email}</strong>
             </div>

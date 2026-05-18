@@ -23,24 +23,24 @@ public class ChannelManagementController {
     }
 
     @GetMapping("/types")
-    public List<ChannelType> types(Authentication auth) {
-        return channelTypes.findByUserIdOrderByCreatedAtAsc(currentUser(auth).getId());
+    public List<ChannelTypeDto> types(Authentication auth) {
+        return channelTypes.findByUserIdOrderByCreatedAtAsc(currentUser(auth).getId()).stream().map(ChannelTypeDto::from).toList();
     }
 
     @PostMapping("/types")
-    public ChannelType createType(@RequestBody ChannelType input, Authentication auth) {
+    public ChannelTypeDto createType(@RequestBody ChannelTypeRequest input, Authentication auth) {
         ChannelType item = new ChannelType();
         copyType(input, item);
         item.setUserId(currentUser(auth).getId());
         item.setCreatedAt(Instant.now());
-        return channelTypes.save(item);
+        return ChannelTypeDto.from(channelTypes.save(item));
     }
 
     @PutMapping("/types/{id}")
-    public ChannelType updateType(@PathVariable Long id, @RequestBody ChannelType input, Authentication auth) {
+    public ChannelTypeDto updateType(@PathVariable Long id, @RequestBody ChannelTypeRequest input, Authentication auth) {
         ChannelType item = ownedType(id, auth);
         copyType(input, item);
-        return channelTypes.save(item);
+        return ChannelTypeDto.from(channelTypes.save(item));
     }
 
     @DeleteMapping("/types/{id}")
@@ -57,21 +57,21 @@ public class ChannelManagementController {
     }
 
     @PostMapping("/service-channels")
-    public ServiceChannel createService(@RequestBody ServiceChannel input, Authentication auth) {
+    public ServiceChannelDto createService(@RequestBody ServiceChannelRequest input, Authentication auth) {
         User user = currentUser(auth);
         ServiceChannel item = new ServiceChannel();
         copyService(input, item);
         item.setUserId(user.getId());
         item.setCreatedByName(user.getRole() == com.satesoft.mobiagent.user.Role.ADMIN ? "Admin" : user.getName());
         item.setCreatedAt(Instant.now());
-        return serviceChannels.save(item);
+        return toServiceDto(serviceChannels.save(item));
     }
 
     @PutMapping("/service-channels/{id}")
-    public ServiceChannel updateService(@PathVariable Long id, @RequestBody ServiceChannel input, Authentication auth) {
+    public ServiceChannelDto updateService(@PathVariable Long id, @RequestBody ServiceChannelRequest input, Authentication auth) {
         ServiceChannel item = ownedService(id, auth);
         copyService(input, item);
-        return serviceChannels.save(item);
+        return toServiceDto(serviceChannels.save(item));
     }
 
     @DeleteMapping("/service-channels/{id}")
@@ -79,17 +79,17 @@ public class ChannelManagementController {
         serviceChannels.delete(ownedService(id, auth));
     }
 
-    private void copyType(ChannelType input, ChannelType target) {
-        target.setName(input.getName());
-        target.setDescription(input.getDescription());
-        target.setActive(input.getActive() == null ? Boolean.TRUE : input.getActive());
+    private void copyType(ChannelTypeRequest input, ChannelType target) {
+        target.setName(input.name());
+        target.setDescription(input.description());
+        target.setActive(input.active() == null ? Boolean.TRUE : input.active());
     }
 
-    private void copyService(ServiceChannel input, ServiceChannel target) {
-        target.setChannelTypeId(input.getChannelTypeId());
-        target.setChannelName(input.getChannelName());
-        target.setCountry(input.getCountry());
-        target.setActive(input.getActive() == null ? Boolean.TRUE : input.getActive());
+    private void copyService(ServiceChannelRequest input, ServiceChannel target) {
+        target.setChannelTypeId(input.channelTypeId());
+        target.setChannelName(input.channelName());
+        target.setCountry(input.country());
+        target.setActive(input.active() == null ? Boolean.TRUE : input.active());
     }
 
     private ChannelType ownedType(Long id, Authentication auth) {
@@ -107,6 +107,20 @@ public class ChannelManagementController {
     private User currentUser(Authentication auth) {
         return users.findByEmail(auth.getName()).orElseThrow();
     }
+
+    private ServiceChannelDto toServiceDto(ServiceChannel item) {
+        String typeName = channelTypes.findById(item.getChannelTypeId()).map(ChannelType::getName).orElse("Unknown");
+        return ServiceChannelDto.from(item, typeName);
+    }
+
+    public record ChannelTypeRequest(String name, String description, Boolean active) {}
+    public record ChannelTypeDto(Long id, Long userId, String name, String description, Boolean active, Instant createdAt) {
+        static ChannelTypeDto from(ChannelType item) {
+            return new ChannelTypeDto(item.getId(), item.getUserId(), item.getName(), item.getDescription(), item.getActive(), item.getCreatedAt());
+        }
+    }
+
+    public record ServiceChannelRequest(Long channelTypeId, String channelName, String country, Boolean active) {}
 
     public record ServiceChannelDto(Long id, Long channelTypeId, String channelTypeName, String channelName, String country, Boolean active, Instant createdAt, String createdByName) {
         static ServiceChannelDto from(ServiceChannel item, String typeName) {

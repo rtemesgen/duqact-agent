@@ -250,7 +250,7 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 }
 .deskLayout {
   display: grid;
-  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
 }
 .deskPanel {
@@ -270,6 +270,10 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   height: 100%;
   display: grid;
   place-items: center;
+}
+.receiptPreview-modal {
+  height: auto;
+  padding: .25rem 0;
 }
 .receiptEmpty {
   display: grid;
@@ -587,6 +591,12 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   border-radius: 14px;
   padding: 1rem;
 }
+.detailCard-inline {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+  align-items: start;
+  gap: 1rem;
+}
 .detailCard span {
   display: block;
   color: var(--muted);
@@ -598,6 +608,14 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 .detailCard strong {
   display: block;
   line-height: 1.45;
+}
+.detailCard-inline span {
+  margin-bottom: 0;
+  align-self: center;
+}
+.detailCard-inline strong {
+  text-align: right;
+  overflow-wrap: anywhere;
 }
 .detailCard-wide {
   grid-column: 1 / -1;
@@ -878,6 +896,13 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   .toolbarRow, .pageHero, .quickAccess { flex-direction: column; grid-template-columns: 1fr; align-items: stretch; }
   .metricsGrid-four, .metricsGrid, .miniStats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .searchField { min-width: 100%; }
+  .detailCard-inline {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .35rem;
+  }
+  .detailCard-inline strong {
+    text-align: left;
+  }
   .pageHero h1 { font-size: 1.9rem; }
   .tableFooter { flex-direction: column; align-items: stretch; }
   .paginationControls { justify-content: space-between; }
