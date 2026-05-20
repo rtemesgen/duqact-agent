@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Eye, History } from 'lucide-react';
+import { History } from 'lucide-react';
 import { api } from '../api/client';
 import type { MnoAccount, TransactionType } from '../api/types';
 import { Modal } from '../components/Modal';
@@ -32,7 +32,7 @@ function isCashAccount(account: MnoAccount) {
 export function TransactionsDeskPage() {
   const [accounts, setAccounts] = useState<MnoAccount[]>([]);
   const [draft, setDraft] = useState<Draft>(() => createBlankDraft());
-  const [balancesOpen, setBalancesOpen] = useState(false);
+  const [balancesHidden, setBalancesHidden] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -101,7 +101,7 @@ export function TransactionsDeskPage() {
       setAccounts(refreshedAccounts);
       const refreshedAvailableAccounts = refreshedAccounts.filter((account) => !isCashAccount(account));
       setDraft(createBlankDraft(draft.accountId || (refreshedAvailableAccounts[0]?.id ?? 0)));
-      setBalancesOpen(false);
+      setBalancesHidden(false);
       setConfirmOpen(false);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Transaction failed.');
@@ -117,7 +117,7 @@ export function TransactionsDeskPage() {
 
   function resetDraft() {
     setDraft((current) => createBlankDraft(current.accountId));
-    setBalancesOpen(false);
+    setBalancesHidden(false);
     setConfirmOpen(false);
   }
 
@@ -152,15 +152,6 @@ export function TransactionsDeskPage() {
             <div className="surfaceHead">
               <h2>Transaction Entry</h2>
               <div className="deskHeaderActions">
-                <button
-                  type="button"
-                  className="iconButton"
-                  aria-label="View balances"
-                  title="View balances"
-                  onClick={() => setBalancesOpen(true)}
-                >
-                  <Eye size={16} />
-                </button>
                 <div className="topbarMeta topbarMeta-globe"><History size={16} /><span>Active Session</span></div>
               </div>
             </div>
@@ -201,33 +192,12 @@ export function TransactionsDeskPage() {
             {submitBlockReason && <p className="errorBanner">{submitBlockReason}</p>}
             <div className="workshopModalActions deskActions">
               <button type="button" className="secondaryButton" onClick={resetDraft} disabled={saving}>Cancel</button>
-              <button type="button" className="primaryButton" onClick={() => setConfirmOpen(true)} disabled={saving || Boolean(submitBlockReason)}>
+              <button type="button" className="primaryButton" onClick={() => { setBalancesHidden(false); setConfirmOpen(true); }} disabled={saving || Boolean(submitBlockReason)}>
                 Confirm
               </button>
             </div>
           </section>
         </div>
-      )}
-
-      {balancesOpen && (
-        <Modal
-          title="Balance Preview"
-          onClose={() => setBalancesOpen(false)}
-          onSubmit={(e) => {
-            e.preventDefault();
-            setBalancesOpen(false);
-          }}
-          submitLabel="Close"
-          size="lg"
-        >
-          <div className="balancePreview">
-            <div><span>Previous E-cash</span><strong>{formatCurrency(previousEmoney)}</strong></div>
-            <div><span>New E-cash</span><strong>{invalidEmoney ? 'Unavailable' : formatCurrency(nextEmoney)}</strong></div>
-            <div><span>Previous Cash at Hand</span><strong>{formatCurrency(previousCash)}</strong></div>
-            <div><span>New Cash at Hand</span><strong>{invalidCash ? 'Unavailable' : formatCurrency(nextCash)}</strong></div>
-          </div>
-          {submitBlockReason && <p className="errorBanner">{submitBlockReason}</p>}
-        </Modal>
       )}
 
       {confirmOpen && (
@@ -255,24 +225,69 @@ export function TransactionsDeskPage() {
                 <strong>MOBI RECEIPT</strong>
               </div>
               <div className="receiptBody">
-                <div className="receiptSplit">
-                  <div>
-                    <span>Account</span>
-                    <strong>{selectedAccount?.name ?? '--'}</strong>
-                    <small>{selectedAccount?.network || '--'}</small>
+                <div className="receiptRows">
+                  <div className="receiptRow">
+                    <span className="receiptRowLabel">Phone Number</span>
+                    <div className="receiptRowValue">
+                      <strong>{draft.clientPhone || 'N/A'}</strong>
+                    </div>
                   </div>
-                  <div className="receiptType">
-                    <span>Type</span>
-                    <strong className={positive ? 'tablePositive' : 'tableNegative'}>{transactionLabel(draft.transactionType)}</strong>
+                  <div className="receiptRow">
+                    <span className="receiptRowLabel">Account</span>
+                    <div className="receiptRowValue">
+                      <strong>{selectedAccount?.name ?? '--'}</strong>
+                      <small>{selectedAccount?.network || '--'}</small>
+                    </div>
+                  </div>
+                  <div className="receiptRow">
+                    <span className="receiptRowLabel">Transaction Type</span>
+                    <div className="receiptRowValue">
+                      <strong className={positive ? 'tablePositive' : 'tableNegative'}>{transactionLabel(draft.transactionType)}</strong>
+                    </div>
+                  </div>
+                  <div className="receiptRow">
+                    <span className="receiptRowLabel">Transaction ID</span>
+                    <div className="receiptRowValue">
+                      <strong>{draft.transactionId || 'N/A'}</strong>
+                    </div>
+                  </div>
+                  <div className="receiptRow">
+                    <span className="receiptRowLabel">Amount</span>
+                    <div className="receiptRowValue">
+                      <strong className="accentText">{formatCurrency(amount)}</strong>
+                    </div>
+                  </div>
+                  <div className="receiptRow">
+                    <span className="receiptRowLabel">Client ID</span>
+                    <div className="receiptRowValue">
+                      <strong>{draft.clientId || 'N/A'}</strong>
+                    </div>
                   </div>
                 </div>
-                <div className="receiptRows">
-                  <div><span>Transaction ID</span><strong>{draft.transactionId || 'N/A'}</strong></div>
-                  <div><span>Client ID</span><strong>{draft.clientId || 'N/A'}</strong></div>
-                  <div><span>Phone</span><strong>{draft.clientPhone || 'N/A'}</strong></div>
-                  <div><span>Amount</span><strong className="accentText">{formatCurrency(amount)}</strong></div>
-                  <div><span>E-cash After</span><strong>{invalidEmoney ? 'Unavailable' : formatCurrency(nextEmoney)}</strong></div>
-                  <div><span>Cash at Hand After</span><strong>{invalidCash ? 'Unavailable' : formatCurrency(nextCash)}</strong></div>
+                <div className="receiptDivider" />
+                <div className="receiptSection">
+                  <div className="receiptSectionHeader">
+                    <span>Balance Information</span>
+                    <button type="button" className="receiptSectionToggle" onClick={() => setBalancesHidden((current) => !current)}>
+                      {balancesHidden ? 'Show' : 'Hide'}
+                    </button>
+                  </div>
+                  {!balancesHidden && (
+                    <div className="receiptRows receiptBalanceRows">
+                      <div className="receiptRow">
+                        <span className="receiptRowLabel">E-cash After</span>
+                        <div className="receiptRowValue">
+                          <strong>{invalidEmoney ? 'Unavailable' : formatCurrency(nextEmoney)}</strong>
+                        </div>
+                      </div>
+                      <div className="receiptRow">
+                        <span className="receiptRowLabel">Cash at Hand After</span>
+                        <div className="receiptRowValue">
+                          <strong>{invalidCash ? 'Unavailable' : formatCurrency(nextCash)}</strong>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="receiptSignature">
                   <div />

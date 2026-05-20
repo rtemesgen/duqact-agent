@@ -339,6 +339,39 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   display: grid;
   gap: 1rem;
 }
+.receiptRows {
+  display: grid;
+  gap: .7rem;
+}
+.receiptRow {
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+  align-items: start;
+  gap: 1rem;
+}
+.receiptRowLabel {
+  display: block;
+  color: var(--muted);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 0;
+}
+.receiptRowValue {
+  min-width: 0;
+  display: grid;
+  justify-items: end;
+  gap: .2rem;
+  text-align: right;
+}
+.receiptRowValue strong {
+  color: #fff;
+}
+.receiptRowValue small {
+  color: var(--muted);
+  font-size: .76rem;
+  line-height: 1.35;
+}
 .receiptSplit {
   display: flex;
   justify-content: space-between;
@@ -363,14 +396,42 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 .receiptType {
   text-align: right;
 }
-.receiptRows {
-  display: grid;
-  gap: .7rem;
+.receiptDivider {
+  border-top: 1px dashed rgba(255,255,255,.12);
 }
-.receiptRows div {
+.receiptSection {
+  display: grid;
+  gap: .75rem;
+}
+.receiptSectionHeader {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 1rem;
+}
+.receiptSectionHeader span {
+  color: var(--muted);
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.receiptSectionToggle {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  cursor: pointer;
+  padding: 0;
+}
+.receiptSectionToggle:hover {
+  opacity: .84;
+}
+.receiptBalanceRows {
+  gap: .6rem;
 }
 .receiptSignature {
   padding-top: .75rem;
