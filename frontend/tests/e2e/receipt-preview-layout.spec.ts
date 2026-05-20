@@ -59,14 +59,23 @@ test.describe.serial('receipt preview layout', () => {
       'Transaction ID',
       'Amount',
       'Client ID',
-      'E-cash After',
-      'Cash at Hand After',
     ]);
     await expect(deskReceipt.locator('.receiptSectionHeader')).toContainText('Balance Information');
-    await deskReceipt.getByRole('button', { name: /^hide$/i }).click();
     await expect(deskReceipt.locator('.receiptBalanceRows')).toHaveCount(0);
     await deskReceipt.getByRole('button', { name: /^show$/i }).click();
     await expect(deskReceipt.locator('.receiptBalanceRows')).toHaveCount(1);
+    await expect(deskReceipt.locator('.receiptRowLabel')).toHaveText([
+      'Phone Number',
+      'Account',
+      'Transaction Type',
+      'Transaction ID',
+      'Amount',
+      'Client ID',
+      'E-cash After',
+      'Cash at Hand After',
+    ]);
+    await deskReceipt.getByRole('button', { name: /^hide$/i }).click();
+    await expect(deskReceipt.locator('.receiptBalanceRows')).toHaveCount(0);
     await expect(deskReceipt).toContainText(deskPhone);
     await expect(deskReceipt).toContainText(deskTransactionId);
     await page.locator('.modalShade').getByRole('button', { name: /^cancel$/i }).first().click();
@@ -91,13 +100,22 @@ test.describe.serial('receipt preview layout', () => {
       'Transaction ID',
       'Amount',
       'Client ID',
+    ]);
+    await expect(walletReceipt.locator('.receiptBalanceRows')).toHaveCount(0);
+    await walletReceipt.getByRole('button', { name: /^show$/i }).click();
+    await expect(walletReceipt.locator('.receiptBalanceRows')).toHaveCount(1);
+    await expect(walletReceipt.locator('.receiptRowLabel')).toHaveText([
+      'Phone Number',
+      'Account',
+      'Transaction Type',
+      'Transaction ID',
+      'Amount',
+      'Client ID',
       'E-cash After',
       'Cash at Hand After',
     ]);
     await walletReceipt.getByRole('button', { name: /^hide$/i }).click();
     await expect(walletReceipt.locator('.receiptBalanceRows')).toHaveCount(0);
-    await walletReceipt.getByRole('button', { name: /^show$/i }).click();
-    await expect(walletReceipt.locator('.receiptBalanceRows')).toHaveCount(1);
     await expect(walletReceipt).toContainText(walletPhone);
     await expect(walletReceipt).toContainText(/balance information/i);
   });

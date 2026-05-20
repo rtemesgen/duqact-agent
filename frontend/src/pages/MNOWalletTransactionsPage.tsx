@@ -18,7 +18,7 @@ export function MNOWalletTransactionsPage() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [edit, setEdit] = useState<ReturnType<typeof createBlank> | null>(null);
   const [modalStep, setModalStep] = useState<TransactionModalStep>('closed');
-  const [balancesHidden, setBalancesHidden] = useState(false);
+  const [balancesHidden, setBalancesHidden] = useState(true);
   const [selected, setSelected] = useState<MnoTransaction | null>(null);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -70,7 +70,7 @@ export function MNOWalletTransactionsPage() {
       window.setTimeout(() => {
         setModalStep('closed');
         setEdit(null);
-        setBalancesHidden(false);
+        setBalancesHidden(true);
         setModalSuccess('');
         setModalError('');
       }, 1000);
@@ -135,7 +135,7 @@ export function MNOWalletTransactionsPage() {
       <section className="surfaceCard">
         <div className="toolbarRow">
           <label className="searchField"><Search size={16} /><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search transactions..." /></label>
-          <button className="primaryButton" onClick={() => { setBalancesHidden(false); setModalStep('form'); setModalError(''); setModalSuccess(''); setEdit(createBlank(accounts[0]?.id ?? 0)); }}><Plus size={18} />Record Transaction</button>
+          <button className="primaryButton" onClick={() => { setBalancesHidden(true); setModalStep('form'); setModalError(''); setModalSuccess(''); setEdit(createBlank(accounts[0]?.id ?? 0)); }}><Plus size={18} />Record Transaction</button>
         </div>
 
         {loading ? (
@@ -218,11 +218,11 @@ export function MNOWalletTransactionsPage() {
             if (saving) return;
             setModalStep('closed');
             setEdit(null);
-            setBalancesHidden(false);
+            setBalancesHidden(true);
             setModalSuccess('');
             setModalError('');
           }}
-          onSubmit={e => { e.preventDefault(); setBalancesHidden(false); setModalStep('confirm'); }}
+          onSubmit={e => { e.preventDefault(); setBalancesHidden(true); setModalStep('confirm'); }}
           submitLabel="Confirm"
           submitDisabled={submitDisabled}
           size="lg"

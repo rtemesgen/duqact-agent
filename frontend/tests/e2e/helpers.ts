@@ -14,8 +14,20 @@ export async function loginFromRole(page: Page, role: 'Admin' | 'Mobi Agent', em
   await page.getByRole('button', { name: /sign in/i }).click();
 }
 
+async function loginSucceeded(page: Page, timeout = 5000) {
+  try {
+    await expect(page.getByRole('heading', { name: 'Mobi Dashboard' })).toBeVisible({ timeout });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function loginAgent(page: Page) {
   await loginFromRole(page, 'Mobi Agent', seededAgent.email, seededAgent.password);
+  if (!await loginSucceeded(page, 5000)) {
+    await loginFromRole(page, 'Mobi Agent', seededAgent.email, 'agent1234');
+  }
   await expect(page.getByRole('heading', { name: 'Mobi Dashboard' })).toBeVisible();
 }
 

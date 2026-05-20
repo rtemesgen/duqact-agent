@@ -32,7 +32,7 @@ function isCashAccount(account: MnoAccount) {
 export function TransactionsDeskPage() {
   const [accounts, setAccounts] = useState<MnoAccount[]>([]);
   const [draft, setDraft] = useState<Draft>(() => createBlankDraft());
-  const [balancesHidden, setBalancesHidden] = useState(false);
+  const [balancesHidden, setBalancesHidden] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -101,7 +101,7 @@ export function TransactionsDeskPage() {
       setAccounts(refreshedAccounts);
       const refreshedAvailableAccounts = refreshedAccounts.filter((account) => !isCashAccount(account));
       setDraft(createBlankDraft(draft.accountId || (refreshedAvailableAccounts[0]?.id ?? 0)));
-      setBalancesHidden(false);
+      setBalancesHidden(true);
       setConfirmOpen(false);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Transaction failed.');
@@ -117,7 +117,7 @@ export function TransactionsDeskPage() {
 
   function resetDraft() {
     setDraft((current) => createBlankDraft(current.accountId));
-    setBalancesHidden(false);
+    setBalancesHidden(true);
     setConfirmOpen(false);
   }
 
@@ -192,7 +192,7 @@ export function TransactionsDeskPage() {
             {submitBlockReason && <p className="errorBanner">{submitBlockReason}</p>}
             <div className="workshopModalActions deskActions">
               <button type="button" className="secondaryButton" onClick={resetDraft} disabled={saving}>Cancel</button>
-              <button type="button" className="primaryButton" onClick={() => { setBalancesHidden(false); setConfirmOpen(true); }} disabled={saving || Boolean(submitBlockReason)}>
+              <button type="button" className="primaryButton" onClick={() => { setBalancesHidden(true); setConfirmOpen(true); }} disabled={saving || Boolean(submitBlockReason)}>
                 Confirm
               </button>
             </div>
