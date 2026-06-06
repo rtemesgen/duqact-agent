@@ -15,12 +15,10 @@ export function DashboardKPICard({
 }) {
   return (
     <article className={`metricCard metric-${accent}`}>
-      <div className="metricPrimaryRow">
-        <span className="metricLabel">{label}</span>
-        <div className="metricValueGroup">
-          {icon && <div className="metricIcon">{icon}</div>}
-          <strong>{value}</strong>
-        </div>
+      <span className="metricLabel">{label}</span>
+      <div className="metricValueGroup">
+        {icon && <div className="metricIcon">{icon}</div>}
+        <strong>{value}</strong>
       </div>
       {hint ? <small>{hint}</small> : null}
     </article>

@@ -169,12 +169,6 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   display: grid;
   gap: .35rem;
 }
-.metricPrimaryRow {
-  display: grid;
-  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
-  align-items: center;
-  gap: .85rem;
-}
 .metricLabel {
   color: var(--muted);
   font-size: .84rem;
@@ -183,11 +177,11 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 .metricValueGroup {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: .6rem;
   min-width: 0;
 }
-.metricCard strong { display: block; font-size: clamp(1.1rem, 3vw, 1.45rem); line-height: 1.08; overflow-wrap: anywhere; text-align: right; }
+.metricCard strong { display: block; font-size: clamp(1.1rem, 3vw, 1.45rem); line-height: 1.08; overflow-wrap: anywhere; text-align: left; }
 .metricCard small { display: block; margin-top: .32rem; color: var(--muted); font-size: .76rem; line-height: 1.35; }
 .metricIcon { color: #adb9cc; display: inline-flex; align-items: center; flex: 0 0 auto; }
 .metric-gold { box-shadow: inset 0 0 0 1px rgba(243,189,8,.18), var(--shadow); }
@@ -211,12 +205,10 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   border-radius: 12px;
   padding: .8rem;
   display: grid;
-  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
-  align-items: center;
-  gap: .75rem;
+  gap: .4rem;
 }
 .miniStats span { display: block; color: var(--muted); font-size: .76rem; line-height: 1.35; }
-.miniStats strong { font-size: 1.05rem; line-height: 1.15; overflow-wrap: anywhere; text-align: right; }
+.miniStats strong { font-size: 1.05rem; line-height: 1.15; overflow-wrap: anywhere; text-align: left; }
 .summaryStrip { display: grid; gap: .85rem; }
 .summaryStrip div { display: flex; gap: .8rem; align-items: flex-start; color: var(--muted); line-height: 1.5; }
 .heroGrid {
@@ -508,10 +500,10 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 .toolbarRow { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
 .toolbarRow-start { justify-content: flex-start; }
 .toolbarRow > * { min-width: 0; }
-.accountSettingsSummaryActions {
-  margin-bottom: .8rem;
+.accountSettingsContentActions {
+  margin-bottom: 1rem;
 }
-.accountSettingsSummaryActions .primaryButton {
+.accountSettingsContentActions .primaryButton {
   min-width: min(260px, 100%);
 }
 .searchField {
@@ -674,7 +666,7 @@ textarea.fieldInvalid {
   flex-wrap: wrap;
 }
 
-.modalShade { position: fixed; inset: 0; background: rgba(8,11,16,.7); display: grid; place-items: center; padding: 1rem; backdrop-filter: blur(5px); }
+.modalShade { position: fixed; inset: 0; background: rgba(8,11,16,.7); display: grid; place-items: center; padding: 1rem; backdrop-filter: blur(5px); z-index: 40; }
 .workshopModal { width: min(640px, 100%); background: #141d2d; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; box-shadow: 0 28px 60px rgba(0,0,0,.45); }
 .workshopModal-lg { width: min(760px, 100%); }
 .workshopModalHead { display: flex; justify-content: space-between; align-items: center; padding: 1.1rem 1.2rem; background: #182336; border-bottom: 1px solid var(--border); }
@@ -1035,7 +1027,7 @@ textarea.fieldInvalid {
   .accountSettingsMobileSummary {
     position: sticky;
     top: 72px;
-    z-index: 9;
+    z-index: 8;
     margin-top: -.15rem;
     padding: .15rem 0 .2rem;
     background: linear-gradient(180deg, rgba(11,18,28,.98), rgba(11,18,28,.94));
@@ -1052,12 +1044,6 @@ textarea.fieldInvalid {
     gap: .22rem;
     min-height: 0;
   }
-  .mnoTransactionsMobileSummary .metricPrimaryRow,
-  .accountSettingsMobileSummary .metricPrimaryRow {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: start;
-    gap: .45rem;
-  }
   .mnoTransactionsMobileSummary .metricLabel,
   .accountSettingsMobileSummary .metricLabel {
     font-size: .75rem;
@@ -1072,9 +1058,6 @@ textarea.fieldInvalid {
     margin-top: .15rem;
     font-size: .72rem;
     line-height: 1.3;
-  }
-  .accountSettingsSummaryActions {
-    margin-bottom: .55rem;
   }
   .detailCard-inline {
     grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
@@ -1523,10 +1506,6 @@ textarea.fieldInvalid {
   .accountSettingsMobileSummary .metricCard {
     padding: .68rem .7rem;
   }
-  .mnoTransactionsMobileSummary .metricPrimaryRow,
-  .accountSettingsMobileSummary .metricPrimaryRow {
-    gap: .4rem;
-  }
   .mnoTransactionsMobileSummary .metricLabel,
   .accountSettingsMobileSummary .metricLabel {
     font-size: .72rem;
@@ -1570,21 +1549,9 @@ textarea.fieldInvalid {
     padding: .9rem .85rem;
   }
 
-  .metricPrimaryRow,
-  .miniStats div,
-  .balancePreview div {
-    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
-    gap: .55rem;
-  }
-
-  .metricValueGroup {
-    justify-content: flex-end;
-  }
-
   .metricCard strong,
-  .miniStats strong,
-  .balancePreview strong {
-    text-align: right;
+  .miniStats strong {
+    text-align: left;
   }
 
   .metricCard strong {

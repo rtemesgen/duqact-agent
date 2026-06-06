@@ -184,10 +184,6 @@ export function MobiAgentSettingsPage() {
   return (
     <section className="pageSection accountSettingsPage">
       <div className="accountSettingsMobileSummary">
-        <div className="toolbarRow toolbarRow-start accountSettingsSummaryActions"><button className="primaryButton" onClick={openCreateModal} disabled={serviceChannels.length === 0}>
-          <Plus size={18} />
-          Add Account
-        </button></div>
         <div className="metricsGrid metricsGrid-four">
           <DashboardKPICard label="Number of Networks" value={totalNetworks} />
           <DashboardKPICard label="Cash At Hand" value={formatCurrency(stats?.totalCashAtHand)} accent="green" />
@@ -206,6 +202,10 @@ export function MobiAgentSettingsPage() {
             <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search accounts..." />
           </label>
         </div>
+        <div className="toolbarRow toolbarRow-start accountSettingsContentActions"><button className="primaryButton" onClick={openCreateModal} disabled={serviceChannels.length === 0}>
+          <Plus size={18} />
+          Add Account
+        </button></div>
 
         {loading ? (
           <div className="surfaceCard surfaceCard-muted"><p className="pageLead">Loading accounts...</p></div>
