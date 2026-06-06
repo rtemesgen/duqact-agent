@@ -182,31 +182,24 @@ export function MobiAgentSettingsPage() {
   }, [page, totalPages]);
 
   return (
-    <section className="pageSection">
-      <div className="pageHero pageHero-row">
-        <div>
-          <p className="eyebrow">Agent Operations</p>
-          <h1>Mobi Account Setting</h1>
-          <p className="pageLead">Manage MNO accounts, balances, and service-channel-linked account records from one place.</p>
-        </div>
-        <button className="primaryButton" onClick={openCreateModal} disabled={serviceChannels.length === 0}>
+    <section className="pageSection accountSettingsPage">
+      <div className="accountSettingsMobileSummary">
+        <div className="toolbarRow toolbarRow-start accountSettingsSummaryActions"><button className="primaryButton" onClick={openCreateModal} disabled={serviceChannels.length === 0}>
           <Plus size={18} />
           Add Account
-        </button>
+        </button></div>
+        <div className="metricsGrid metricsGrid-four">
+          <DashboardKPICard label="Number of Networks" value={totalNetworks} />
+          <DashboardKPICard label="Cash At Hand" value={formatCurrency(stats?.totalCashAtHand)} accent="green" />
+          <DashboardKPICard label="E-Cash Balance" value={formatCurrency(stats?.totalEmoney)} accent="gold" />
+          <DashboardKPICard label="Total Investment" value={formatCurrency(totalInvestment)} />
+        </div>
       </div>
-
       {serviceChannels.length === 0 && !loading && <p className="errorBanner">Create a service channel first before adding an account.</p>}
       {notice && <p className="noticeBanner">{notice}</p>}
       {error && <p className="errorBanner">{error}</p>}
 
-      <div className="metricsGrid metricsGrid-four">
-        <DashboardKPICard label="Number of Networks" value={totalNetworks} />
-        <DashboardKPICard label="Cash At Hand" value={formatCurrency(stats?.totalCashAtHand)} accent="green" />
-        <DashboardKPICard label="E-Cash Balance" value={formatCurrency(stats?.totalEmoney)} accent="gold" />
-        <DashboardKPICard label="Total Investment" value={formatCurrency(totalInvestment)} />
-      </div>
-
-      <section className="surfaceCard">
+      <section className="surfaceCard accountSettingsContent">
         <div className="toolbarRow">
           <label className="searchField">
             <Search size={16} />

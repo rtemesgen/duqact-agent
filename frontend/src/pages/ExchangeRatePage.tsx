@@ -204,14 +204,6 @@ export function ExchangeRatePage() {
 
   return (
     <section className="pageSection">
-      <div className="pageHero">
-        <div>
-          <p className="eyebrow">Agent Operations</p>
-          <h1>Exchange Rate</h1>
-          <p className="pageLead">This area now supports the reference workflow for currency profiles and denomination management, while keeping persisted exchange rates on the current backend.</p>
-        </div>
-      </div>
-
       {notice && <p className="noticeBanner">{notice}</p>}
       {error && <p className="errorBanner">{error}</p>}
 

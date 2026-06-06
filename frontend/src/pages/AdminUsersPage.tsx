@@ -69,14 +69,6 @@ export function AdminUsersPage() {
 
   return (
     <section className="pageSection">
-      <div className="pageHero">
-        <div>
-          <p className="eyebrow">Admin</p>
-          <h1>User Management</h1>
-          <p className="pageLead">Review users, inspect assigned roles, and change access levels through the same dense workshop patterns used in the reference app.</p>
-        </div>
-      </div>
-
       {notice && <p className="noticeBanner">{notice}</p>}
       {error && <p className="errorBanner">{error}</p>}
 

@@ -28,7 +28,6 @@ export function AccountSettingsPage() {
   if (!settings) return <section className="pageSection"><div className="surfaceCard">Loading settings...</div></section>;
   return (
     <section className="pageSection settingsPage">
-      <div className="pageHero"><div><p className="eyebrow">Account</p><h1>Account Settings</h1><p className="pageLead">Operational preferences, notifications, theme, permissions, and password controls.</p></div></div>
       {message && <p className="noticeBanner">{message}</p>}
       <div className="settingsGrid">
         <section className="surfaceCard"><div className="surfaceHead"><h2><Store size={18} />Shop Settings</h2></div><ToggleRow label="Disable Discount for Debt" description="When enabled, the discount modal is skipped for debt payments." value={settings.disableDiscountForDebt} onChange={(next) => setSettings({ ...settings, disableDiscountForDebt: next })} /></section>

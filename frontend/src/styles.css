@@ -328,7 +328,6 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   font-size: .72rem;
   font-weight: 800;
   letter-spacing: .08em;
-  text-transform: uppercase;
   opacity: .7;
 }
 .receiptHead strong {
@@ -353,8 +352,7 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   display: block;
   color: var(--muted);
   font-size: .72rem;
-  text-transform: uppercase;
-  letter-spacing: .06em;
+  letter-spacing: .01em;
   margin-bottom: 0;
 }
 .receiptRowValue {
@@ -366,6 +364,11 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 }
 .receiptRowValue strong {
   color: #fff;
+}
+.receiptAmountValue {
+  font-size: clamp(1.4rem, 4vw, 1.8rem);
+  font-weight: 900;
+  line-height: 1;
 }
 .receiptRowValue small {
   color: var(--muted);
@@ -385,8 +388,7 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   display: block;
   color: var(--muted);
   font-size: .72rem;
-  text-transform: uppercase;
-  letter-spacing: .06em;
+  letter-spacing: .01em;
   margin-bottom: .2rem;
 }
 .receiptSplit strong,
@@ -412,7 +414,6 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 .receiptSectionHeader span {
   color: var(--muted);
   font-size: .72rem;
-  text-transform: uppercase;
   letter-spacing: .08em;
 }
 .receiptSectionToggle {
@@ -422,8 +423,7 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   font: inherit;
   font-size: .78rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .08em;
+  letter-spacing: .02em;
   cursor: pointer;
   padding: 0;
 }
@@ -449,8 +449,7 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   margin: 0;
   color: var(--muted);
   font-size: .66rem;
-  text-transform: uppercase;
-  letter-spacing: .1em;
+  letter-spacing: .02em;
 }
 .accountCardGrid {
   display: grid;
@@ -509,6 +508,12 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 .toolbarRow { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
 .toolbarRow-start { justify-content: flex-start; }
 .toolbarRow > * { min-width: 0; }
+.accountSettingsSummaryActions {
+  margin-bottom: .8rem;
+}
+.accountSettingsSummaryActions .primaryButton {
+  min-width: min(260px, 100%);
+}
 .searchField {
   display: flex; align-items: center; gap: .65rem; padding: .75rem .95rem; background: #141d2d;
   border: 1px solid var(--border); border-radius: 12px; min-width: min(480px, 100%); color: var(--muted);
@@ -558,6 +563,20 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 }
 .noticeBanner { background: rgba(25,179,107,.14); border-color: rgba(25,179,107,.3); color: #98f0be; }
 .errorBanner { background: rgba(221,92,92,.14); border-color: rgba(221,92,92,.3); color: #ffb5b5; }
+.fieldErrorText {
+  display: block;
+  color: #ffb5b5;
+  font-size: .74rem;
+  line-height: 1.35;
+  text-transform: none;
+  letter-spacing: 0;
+}
+input.fieldInvalid,
+select.fieldInvalid,
+textarea.fieldInvalid {
+  border-color: rgba(221,92,92,.72);
+  box-shadow: 0 0 0 3px rgba(221,92,92,.1);
+}
 .inlineSelect { min-width: 190px; }
 .tableFooter {
   display: flex;
@@ -618,6 +637,11 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   gap: .45rem;
   justify-items: end;
 }
+.mobileDataAmount {
+  font-size: 1.22rem;
+  font-weight: 900;
+  line-height: 1.05;
+}
 .mobileDataRows {
   display: grid;
   gap: .7rem;
@@ -632,8 +656,7 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   color: var(--muted);
   font-size: .76rem;
   font-weight: 800;
-  letter-spacing: .06em;
-  text-transform: uppercase;
+  letter-spacing: .01em;
   flex: 0 0 auto;
   min-width: 0;
 }
@@ -683,10 +706,11 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   gap: .9rem;
 }
 .detailCard {
-  background: rgba(255,255,255,.03);
-  border: 1px solid var(--border-soft);
+  background: transparent;
+  border: 1px solid rgba(255,255,255,.08);
   border-radius: 14px;
-  padding: 1rem;
+  padding: .95rem 1rem;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.015);
 }
 .detailCard-inline {
   display: grid;
@@ -699,8 +723,7 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   color: var(--muted);
   margin-bottom: .35rem;
   font-size: .82rem;
-  text-transform: uppercase;
-  letter-spacing: .05em;
+  letter-spacing: .01em;
 }
 .detailCard strong {
   display: block;
@@ -921,6 +944,21 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   gap: .75rem;
   flex-wrap: wrap;
 }
+.profileEditIconButton {
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+}
+.profileTabRow {
+  margin-top: -.1rem;
+  margin-bottom: 0;
+}
+.profileVerificationCard {
+  margin-top: -.1rem;
+}
 .verificationMediaGrid {
   margin-top: 1rem;
   display: grid;
@@ -993,6 +1031,51 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   .toolbarRow, .pageHero, .quickAccess { flex-direction: column; grid-template-columns: 1fr; align-items: stretch; }
   .metricsGrid-four, .metricsGrid, .miniStats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .searchField { min-width: 100%; }
+  .mnoTransactionsMobileSummary,
+  .accountSettingsMobileSummary {
+    position: sticky;
+    top: 72px;
+    z-index: 9;
+    margin-top: -.15rem;
+    padding: .15rem 0 .2rem;
+    background: linear-gradient(180deg, rgba(11,18,28,.98), rgba(11,18,28,.94));
+    backdrop-filter: blur(10px);
+  }
+  .mnoTransactionsMobileSummary .metricsGrid,
+  .accountSettingsMobileSummary .metricsGrid {
+    gap: .55rem;
+  }
+  .mnoTransactionsMobileSummary .metricCard,
+  .accountSettingsMobileSummary .metricCard {
+    padding: .72rem .75rem;
+    border-radius: 12px;
+    gap: .22rem;
+    min-height: 0;
+  }
+  .mnoTransactionsMobileSummary .metricPrimaryRow,
+  .accountSettingsMobileSummary .metricPrimaryRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: .45rem;
+  }
+  .mnoTransactionsMobileSummary .metricLabel,
+  .accountSettingsMobileSummary .metricLabel {
+    font-size: .75rem;
+    line-height: 1.28;
+  }
+  .mnoTransactionsMobileSummary .metricCard strong,
+  .accountSettingsMobileSummary .metricCard strong {
+    font-size: 1.08rem;
+  }
+  .mnoTransactionsMobileSummary .metricCard small,
+  .accountSettingsMobileSummary .metricCard small {
+    margin-top: .15rem;
+    font-size: .72rem;
+    line-height: 1.3;
+  }
+  .accountSettingsSummaryActions {
+    margin-bottom: .55rem;
+  }
   .detailCard-inline {
     grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
     gap: .75rem;
@@ -1001,6 +1084,11 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   .tableFooter { flex-direction: column; align-items: stretch; }
   .paginationControls { justify-content: space-between; }
   .profileHeaderActions { width: 100%; flex-direction: column; }
+  .profileEditIconButton {
+    width: 40px;
+    min-width: 40px;
+    align-self: flex-end;
+  }
   .contentTopbar {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -1269,7 +1357,6 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   }
 
   .modalShade {
-    align-items: end;
     padding: .5rem;
   }
 
@@ -1278,7 +1365,7 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
     width: 100%;
     max-width: 100%;
     max-height: calc(100vh - 1rem);
-    border-radius: 18px 18px 0 0;
+    border-radius: 18px;
   }
 
   .workshopModalHead,
@@ -1348,6 +1435,9 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
   .profileHeaderCard {
     margin-top: -44px;
     padding: 0 .9rem .9rem;
+  }
+  .profileTabRow {
+    margin-bottom: .1rem;
   }
 
   .profileAvatar {
@@ -1423,6 +1513,30 @@ label { display: grid; gap: .45rem; color: #b6c0d1; font-size: .88rem; text-tran
 
   .contentTopbar {
     gap: .6rem;
+  }
+  .mnoTransactionsMobileSummary,
+  .accountSettingsMobileSummary {
+    top: 68px;
+    padding-bottom: .15rem;
+  }
+  .mnoTransactionsMobileSummary .metricCard,
+  .accountSettingsMobileSummary .metricCard {
+    padding: .68rem .7rem;
+  }
+  .mnoTransactionsMobileSummary .metricPrimaryRow,
+  .accountSettingsMobileSummary .metricPrimaryRow {
+    gap: .4rem;
+  }
+  .mnoTransactionsMobileSummary .metricLabel,
+  .accountSettingsMobileSummary .metricLabel {
+    font-size: .72rem;
+  }
+  .mnoTransactionsMobileSummary .metricCard strong,
+  .accountSettingsMobileSummary .metricCard strong {
+    font-size: 1rem;
+  }
+  .mobileDataAmount {
+    font-size: 1.34rem;
   }
 
   .topbarRight {

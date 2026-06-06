@@ -79,13 +79,11 @@ export function ChannelManagementPage() {
 
   return (
     <section className="pageSection">
-      <div className="pageHero pageHero-row">
-        <div><p className="eyebrow">Agent Operations</p><h1>Channel Management</h1><p className="pageLead">Manage service channels and their types across different countries.</p></div>
-        <button className="primaryButton" onClick={() => tab === 'types' ? setTypeEdit(blankType) : setServiceEdit({ ...blankService, channelTypeId: types[0]?.id ?? 0 })}><Plus size={18} />{tab === 'types' ? 'Add Channel Type' : 'Add Service Channel'}</button>
-      </div>
-
       <section className="surfaceCard">
-        <div className="tabRow"><button type="button" className={tab === 'types' ? 'tabButton activeTab' : 'tabButton'} onClick={() => setTab('types')}>Channel Types</button><button type="button" className={tab === 'services' ? 'tabButton activeTab' : 'tabButton'} onClick={() => setTab('services')}>Service Channels</button></div>
+        <div className="toolbarRow">
+          <div className="tabRow"><button type="button" className={tab === 'types' ? 'tabButton activeTab' : 'tabButton'} onClick={() => setTab('types')}>Channel Types</button><button type="button" className={tab === 'services' ? 'tabButton activeTab' : 'tabButton'} onClick={() => setTab('services')}>Service Channels</button></div>
+          <button className="primaryButton" onClick={() => tab === 'types' ? setTypeEdit(blankType) : setServiceEdit({ ...blankService, channelTypeId: types[0]?.id ?? 0 })}><Plus size={18} />{tab === 'types' ? 'Add Channel Type' : 'Add Service Channel'}</button>
+        </div>
         {tab === 'services' && <div className="toolbarRow toolbarRow-start"><label className="compactFilter">Filter by Country:<select value={country} onChange={e => setCountry(e.target.value)}>{countries.map(item => <option key={item} value={item}>{item === 'ALL' ? 'All Countries' : item}</option>)}</select></label></div>}
 
         {tab === 'types' ? (

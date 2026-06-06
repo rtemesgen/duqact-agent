@@ -14,6 +14,9 @@ type Draft = {
   clientId: string;
 };
 
+type DraftField = 'clientPhone' | 'accountId' | 'transactionType' | 'amount' | 'transactionId' | 'clientId';
+type DraftFieldErrors = Partial<Record<DraftField, string>>;
+
 function createBlankDraft(accountId = 0): Draft {
   return {
     accountId,
@@ -34,6 +37,7 @@ export function TransactionsDeskPage() {
   const [draft, setDraft] = useState<Draft>(() => createBlankDraft());
   const [balancesHidden, setBalancesHidden] = useState(true);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmAttempted, setConfirmAttempted] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -71,18 +75,26 @@ export function TransactionsDeskPage() {
   const positive = isWithdrawal || draft.transactionType === 'FLOAT_TOP_UP';
   const invalidEmoney = nextEmoney < 0;
   const invalidCash = nextCash < 0;
-  const invalidBalanceMessage = invalidEmoney ? 'Insufficient e-cash balance.' : invalidCash ? 'Insufficient cash at hand.' : '';
-  const accountMissing = !draft.accountId;
-  const accountUnavailable = Boolean(draft.accountId) && !selectedAccount;
-  const amountMissing = !draft.amount;
+  const requiredFieldErrors: DraftFieldErrors = {
+    clientPhone: draft.clientPhone.trim() ? undefined : 'Phone number is required.',
+    accountId: draft.accountId ? undefined : 'Account is required.',
+    transactionType: draft.transactionType ? undefined : 'Transaction type is required.',
+    amount: amount > 0 ? undefined : 'Amount is required.',
+    transactionId: draft.transactionId.trim() ? undefined : 'Transaction ID is required.',
+    clientId: draft.clientId.trim() ? undefined : 'Client ID is required.',
+  };
+  const hasRequiredFieldErrors = Object.values(requiredFieldErrors).some(Boolean);
   const submitBlockReason =
-    accountMissing ? 'Select an account before continuing.' :
-    accountUnavailable ? 'The selected account is not available right now. Re-select the account and try again.' :
-    amountMissing ? 'Enter a transaction amount before continuing.' :
-    invalidBalanceMessage;
+    Boolean(draft.accountId) && !selectedAccount
+      ? 'The selected account is not available right now. Re-select the account and try again.'
+      : invalidEmoney
+        ? 'Insufficient e-cash balance.'
+        : invalidCash
+          ? 'Insufficient cash at hand.'
+          : '';
 
   async function recordTransaction() {
-    if (!draft.accountId || !draft.amount || !selectedAccount || saveLock.current) return;
+    if (hasRequiredFieldErrors || !draft.accountId || !selectedAccount || saveLock.current || Boolean(submitBlockReason)) return;
     saveLock.current = true;
     setSaving(true);
     setMessage('');
@@ -103,6 +115,7 @@ export function TransactionsDeskPage() {
       setDraft(createBlankDraft(draft.accountId || (refreshedAvailableAccounts[0]?.id ?? 0)));
       setBalancesHidden(true);
       setConfirmOpen(false);
+      setConfirmAttempted(false);
     } catch (saveError) {
       setError(saveError instanceof Error ? saveError.message : 'Transaction failed.');
     } finally {
@@ -119,18 +132,18 @@ export function TransactionsDeskPage() {
     setDraft((current) => createBlankDraft(current.accountId));
     setBalancesHidden(true);
     setConfirmOpen(false);
+    setConfirmAttempted(false);
+  }
+
+  function openConfirm() {
+    setConfirmAttempted(true);
+    setBalancesHidden(true);
+    if (hasRequiredFieldErrors) return;
+    setConfirmOpen(true);
   }
 
   return (
     <section className="pageSection">
-      <div className="pageHero">
-        <div>
-          <p className="eyebrow">Operations</p>
-          <h1>Transactions Desk</h1>
-          <p className="pageLead">Record account-based deposits and withdrawals with a receipt confirmation before saving.</p>
-        </div>
-      </div>
-
       {message && <p className="noticeBanner">{message}</p>}
       {error && <p className="errorBanner">{error}</p>}
 
@@ -158,41 +171,46 @@ export function TransactionsDeskPage() {
             <div className="formGrid formGrid-two">
               <label>
                 Phone Number
-                <input value={draft.clientPhone} onChange={(e) => updateDraft('clientPhone', e.target.value)} placeholder="+256..." />
+                <input className={confirmAttempted && requiredFieldErrors.clientPhone ? 'fieldInvalid' : ''} value={draft.clientPhone} onChange={(e) => updateDraft('clientPhone', e.target.value)} placeholder="+256..." />
+                {confirmAttempted && requiredFieldErrors.clientPhone ? <span className="fieldErrorText">{requiredFieldErrors.clientPhone}</span> : null}
               </label>
               <label>
                 Account
-                <select value={draft.accountId} onChange={(e) => updateDraft('accountId', Number(e.target.value))}>
+                <select className={confirmAttempted && requiredFieldErrors.accountId ? 'fieldInvalid' : ''} value={draft.accountId} onChange={(e) => updateDraft('accountId', Number(e.target.value))}>
                   {availableAccounts.map((account) => (
                     <option key={account.id} value={account.id}>{account.name} ({account.network})</option>
                   ))}
                 </select>
+                {confirmAttempted && requiredFieldErrors.accountId ? <span className="fieldErrorText">{requiredFieldErrors.accountId}</span> : null}
               </label>
               <label>
                 Transaction Type
-                <select value={draft.transactionType} onChange={(e) => updateDraft('transactionType', e.target.value as TransactionType)}>
+                <select className={confirmAttempted && requiredFieldErrors.transactionType ? 'fieldInvalid' : ''} value={draft.transactionType} onChange={(e) => updateDraft('transactionType', e.target.value as TransactionType)}>
                   <option value="DEPOSIT">Deposit</option>
                   <option value="FLOAT_WITHDRAWAL">Withdrawal</option>
                   <option value="FLOAT_TOP_UP">Float Top-up</option>
                 </select>
+                {confirmAttempted && requiredFieldErrors.transactionType ? <span className="fieldErrorText">{requiredFieldErrors.transactionType}</span> : null}
               </label>
               <label>
                 Amount ({selectedAccount?.currency || 'UGX'})
-                <input type="number" value={draft.amount} onChange={(e) => updateDraft('amount', e.target.value)} placeholder="0.00" min={0} />
+                <input className={confirmAttempted && requiredFieldErrors.amount ? 'fieldInvalid' : ''} type="number" value={draft.amount} onChange={(e) => updateDraft('amount', e.target.value)} placeholder="0.00" min={0} />
+                {confirmAttempted && requiredFieldErrors.amount ? <span className="fieldErrorText">{requiredFieldErrors.amount}</span> : null}
               </label>
               <label>
                 Transaction ID
-                <input value={draft.transactionId} onChange={(e) => updateDraft('transactionId', e.target.value)} placeholder="Transaction ID" />
+                <input className={confirmAttempted && requiredFieldErrors.transactionId ? 'fieldInvalid' : ''} value={draft.transactionId} onChange={(e) => updateDraft('transactionId', e.target.value)} placeholder="Transaction ID" />
+                {confirmAttempted && requiredFieldErrors.transactionId ? <span className="fieldErrorText">{requiredFieldErrors.transactionId}</span> : null}
               </label>
               <label>
                 Client ID
-                <input value={draft.clientId} onChange={(e) => updateDraft('clientId', e.target.value)} placeholder="Client ID" />
+                <input className={confirmAttempted && requiredFieldErrors.clientId ? 'fieldInvalid' : ''} value={draft.clientId} onChange={(e) => updateDraft('clientId', e.target.value)} placeholder="Client ID" />
+                {confirmAttempted && requiredFieldErrors.clientId ? <span className="fieldErrorText">{requiredFieldErrors.clientId}</span> : null}
               </label>
             </div>
-            {submitBlockReason && <p className="errorBanner">{submitBlockReason}</p>}
             <div className="workshopModalActions deskActions">
               <button type="button" className="secondaryButton" onClick={resetDraft} disabled={saving}>Cancel</button>
-              <button type="button" className="primaryButton" onClick={() => { setBalancesHidden(true); setConfirmOpen(true); }} disabled={saving || Boolean(submitBlockReason)}>
+              <button type="button" className="primaryButton" onClick={openConfirm} disabled={saving}>
                 Confirm
               </button>
             </div>
@@ -229,7 +247,7 @@ export function TransactionsDeskPage() {
                   <div className="receiptRow">
                     <span className="receiptRowLabel">Phone Number</span>
                     <div className="receiptRowValue">
-                      <strong>{draft.clientPhone || 'N/A'}</strong>
+                      <strong>{draft.clientPhone}</strong>
                     </div>
                   </div>
                   <div className="receiptRow">
@@ -248,7 +266,7 @@ export function TransactionsDeskPage() {
                   <div className="receiptRow">
                     <span className="receiptRowLabel">Transaction ID</span>
                     <div className="receiptRowValue">
-                      <strong>{draft.transactionId || 'N/A'}</strong>
+                      <strong>{draft.transactionId}</strong>
                     </div>
                   </div>
                   <div className="receiptRow">
@@ -260,7 +278,7 @@ export function TransactionsDeskPage() {
                   <div className="receiptRow">
                     <span className="receiptRowLabel">Client ID</span>
                     <div className="receiptRowValue">
-                      <strong>{draft.clientId || 'N/A'}</strong>
+                      <strong>{draft.clientId}</strong>
                     </div>
                   </div>
                 </div>
