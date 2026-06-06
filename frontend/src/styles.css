@@ -22,6 +22,29 @@
 html, body, #root { min-height: 100%; }
 body { margin: 0; background: var(--bg); color: var(--text); }
 img, svg { max-width: 100%; }
+html, body, #root,
+.workshopMain,
+.workshopSidebar,
+.tableWrap,
+.mobileDataList,
+.workshopModalBody,
+.tabRow {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar,
+.workshopMain::-webkit-scrollbar,
+.workshopSidebar::-webkit-scrollbar,
+.tableWrap::-webkit-scrollbar,
+.mobileDataList::-webkit-scrollbar,
+.workshopModalBody::-webkit-scrollbar,
+.tabRow::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
 button, input, select, textarea { font: inherit; }
 button { cursor: pointer; }
 button:disabled { cursor: not-allowed; opacity: .72; }
@@ -699,10 +722,10 @@ textarea.fieldInvalid {
 }
 .detailCard {
   background: transparent;
-  border: 1px solid rgba(255,255,255,.08);
+  border: 1px solid transparent;
   border-radius: 14px;
   padding: .95rem 1rem;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.015);
+  box-shadow: none;
 }
 .detailCard-inline {
   display: grid;
